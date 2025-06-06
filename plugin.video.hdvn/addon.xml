@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="plugin.video.hdvn"
+version="1.2.5"
+name="KHO PHIM MIỄN PHÍ"
+provider-name="cuibap">
+<requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+</requires>
+<extension point="xbmc.python.pluginsource" library="main.py">
+  <provides>video</provides>
+</extension>
+<extension point="xbmc.addon.metadata">
+  <summary lang="en">Đây là addon xem phim 4K-HD hoàn toàn miễn phí</summary>
+  <description lang="en_GB">Dữu liệu được tổng hợp từ các nguồn trên internet, tác giả addon không chịu trách nhiệm về tính pháp lý khi người dùng sử dụng addon này để xem phim.</description>
+  <disclaimer lang="en_GB">Tham gia nhóm Telegram để biết thêm chi tiết</disclaimer>
+  <assets>
+    <icon>icon.png</icon>
+    <fanart>fanart.jpg</fanart>
+    <screenshot>resources\screenshot-01.jpg</screenshot>
+    <screenshot>resources\screenshot-02.jpg</screenshot>
+    <screenshot>resources\screenshot-03.jpg</screenshot>    
+  </assets>
+  <news>Updated with latest artwork metadata</news>
+</extension>
+</addon>
