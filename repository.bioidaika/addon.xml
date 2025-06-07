@@ -2,9 +2,9 @@
 <addon id="repository.bioidaika" name="BioiDaika Repository" version="0.0.1" provider-name="BioiDaika">
     <extension point="xbmc.addon.repository">
         <dir>
-            <info compressed="false">https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/refs/heads/main/addons.xml</info>
-            <checksum>https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/refs/heads/main/addons.xml.md5</checksum>
-            <datadir zip="true">https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/refs/heads/main/</datadir>
+            <info compressed="false">https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/main/addons.xml</info>
+            <checksum>https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/main/addons.xml.md5</checksum>
+            <datadir zip="true">https://raw.githubusercontent.com/bioidaika/bioidaika.github.io/main</datadir>
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
