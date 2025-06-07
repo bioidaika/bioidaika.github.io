@@ -12,9 +12,15 @@
         <description>Repository containing KODI add-ons</description>
         <disclaimer>BioiDaika Repository</disclaimer>
         <platform>all</platform>
+        <language>en</language>
+        <license>MIT</license>
+        <forum></forum>
+        <website></website>
+        <email></email>
+        <source></source>
         <assets>
             <icon>icon.png</icon>
-            <fanart>icon.jpg</fanart>
+            <fanart>fanart.jpg</fanart>
         </assets>
     </extension>
 </addon> 
