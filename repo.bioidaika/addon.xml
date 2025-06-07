@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repo.bioidaika" name="BioiDaika Repository" version="0.0.1" provider-name="BioiDaika">
+<addon id="repository.bioidaika" name="BioiDaika Repository" version="0.0.1" provider-name="BioiDaika">
     <extension point="xbmc.addon.repository" name="BioiDaika Repository">
         <dir>
             <info compressed="false">https://bioidaika.github.io/addons.xml</info>
