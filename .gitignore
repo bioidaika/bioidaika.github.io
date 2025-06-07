@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# KODI add-on source directories
+plugin.video.hdvn/
+repo_vietmediaf_offical/
+
 # IDE
 .vscode/
 .idea/
