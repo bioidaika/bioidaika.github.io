@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+    <coordinates>
+        <left>335</left>
+        <top>160</top>
+    </coordinates>
+    <controls>
+        <control type="image">
+            <description>Background</description>
+            <left>0</left>
+            <top>0</top>
+            <width>610</width>
+            <height>400</height>
+            <texture colordiffuse="FF333333">dialog-bg.png</texture>
+        </control>
+        <control type="label" id="1">
+            <description>Header</description>
+            <left>20</left>
+            <top>20</top>
+            <width>570</width>
+            <height>30</height>
+            <font>font14</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <align>center</align>
+            <aligny>center</aligny>
+        </control>
+        <control type="textbox" id="5">
+            <description>Message</description>
+            <left>30</left>
+            <top>70</top>
+            <width>550</width>
+            <height>280</height>
+            <font>font13</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <align>left</align>
+            <aligny>top</aligny>
+        </control>
+        <control type="button" id="7">
+            <description>Close</description>
+            <left>255</left>
+            <top>350</top>
+            <width>100</width>
+            <height>30</height>
+            <label>OK</label>
+            <font>font12</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <focusedcolor>FF000000</focusedcolor>
+            <align>center</align>
+            <aligny>center</aligny>
+            <texturefocus colordiffuse="FFFFBB00">button-focus.png</texturefocus>
+            <texturenofocus colordiffuse="FF555555">button-nofocus.png</texturenofocus>
+        </control>
+    </controls>
+</window>

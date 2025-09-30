@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NHẬP THÔNG TIN TÀI KHOẢN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #008000;
+            text-align: center;
+            font-size: 130%;
+        }
+
+        .form-container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-container label,
+        .form-container input[type="text"],
+        .form-container input[type="password"],
+        .form-container input[type="submit"],
+        .form-container input[type="button"] {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="password"],
+        .form-container input[type="submit"],
+        .form-container input[type="button"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        .form-container input[type="submit"] {
+            background-color: #337ab7;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .form-container input[type="submit"]:hover {
+            background-color: #23527c;
+        }
+
+        .form-container input[type="button"] {
+            background-color: #ccc;
+            color: #333;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .form-container input[type="button"]:hover {
+            background-color: #999;
+        }
+
+        .note {
+            font-style: italic;
+            color: #f00;
+            margin-top: 10px;
+        }
+
+        .user-info {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function validateForm() {
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value.trim();
+
+            if (!username.includes("@")) {
+                alert("E-mail phải có @");
+                return false;
+            }
+
+            return true;
+        }
+
+        function resetForm() {
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        }
+
+        function displayUserInfo() {
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value.trim();
+            var userInfo = "User name: " + username + "<br>Password: " + password;
+            document.getElementById("user-info").innerHTML = userInfo;
+			
+			alert("Đã gửi thông tin đến Addon");
+        }
+    </script>
+</head>
+<body>
+    <div class="form-container">
+        <h1 style="color: #008000">VIETMEDIA <br> TRANG NHẬP THÔNG TIN TÀI KHOẢN</h1>
+        <form action="http://localhost:7777/submit" method="post" onsubmit="return validateForm();">
+            <label for="username">E-mail:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Mật khẩu:</label>
+            <input type="password" id="password" name="password" required>
+
+            <input type="submit" value="Nhập vào Addon" onclick="displayUserInfo()">
+            <input type="button" value="Nhập lại" onclick="resetForm()">
+
+            <div class="note">
+                Chú ý nhập đúng user name và mật khẩu, nếu không sẽ không play được video.
+            </div>
+
+            <div class="user-info" id="user-info"></div>
+        </form>
+    </div>
+</body>
+</html>

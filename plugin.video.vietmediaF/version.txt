@@ -1,0 +1,27 @@
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.29[/COLOR]
+1. Sửa lỗi 4share
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.28[/COLOR]
+1. Sửa lỗi 4share
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.27[/COLOR]
+1. Sửa lỗi 4SHARE
+2. Sửa lỗi FSHARE
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.25[/COLOR]
+1. Thay domain Phongblack
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.22[/COLOR]
+1. Thêm phần speedtest đến Fshare.
+2. Thêm domain "@kodi.vn"
+3. Sửa lỗi lặt vặt khác.
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.21[/COLOR]
+
+1. Khả năng tự load phụ đề nếu trong thư mục Fshare có phụ đề đi kèm.
+2. Bật tắt lưu trữ lịch sử xem phim trong ADDON SETTING.
+
+[COLOR yellow]ADDON VIETMEDIAF VERSION 11.20[/COLOR]
+
+1. Thêm 3 web phim [COLOR yellow]ThuvienHD, ThuvienCine, HDVietnam[/COLOR] trong mục "Web Fshare"
+2. Sửa mục tìm kiếm. Có thể vào mục TÌM KIẾM để tìm theo phim bộ.

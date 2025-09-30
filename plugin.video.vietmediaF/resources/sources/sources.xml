@@ -1,0 +1,30 @@
+<sources>
+    <programs>
+        <default pathversion="1"></default>
+    </programs>
+    <video>
+        <default pathversion="1"></default>
+    </video>
+    <music>
+        <default pathversion="1"></default>
+    </music>
+    <pictures>
+        <default pathversion="1"></default>
+    </pictures>
+    <files>
+        <default pathversion="1"></default>
+        <source>
+            <name>.kodivmf</name>
+            <path pathversion="1">https://kodivmf.github.io/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+        <source>
+            <name>.kodi</name>
+            <path pathversion="1">https://kodi.ddns.vn/</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </files>
+    <games>
+        <default pathversion="1"></default>
+    </games>
+</sources>

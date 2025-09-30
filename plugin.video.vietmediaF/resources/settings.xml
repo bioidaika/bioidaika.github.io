@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<settings>
+	<!-- Tài khoản Fshare -->
+	<category label="[COLOR yellow]Tài khoản Fshare[/COLOR]">
+		<setting label="[COLOR yellow]Nhập nhanh tài khoản Fshare[/COLOR]" type="lsep"/>
+		<setting type="action" label="[COLOR orange]Nhập bằng mã QR[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=quick_account_qr)" />
+		<setting type="action" label="[COLOR orange]Nhập bằng Code[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=quick_account_code)" />
+
+		<setting label="[COLOR yellow]Thông tin tài khoản[/COLOR]" type="lsep"/>
+		<setting id="domainforfs" type="select" label="[COLOR orange]Chọn domain e-mail[/COLOR]" values="Không có|@gmail.com|@fshare.xyz|@1share.xyz|@fshare.vip|@vietmediaf.net|@kodi.vn|@hotmail.com|@yahoo.com|@yahoo.com.vn|@outlook.com|@fshare.vn|@yandex.com|@me.com|@icloud.com|@f5.si|@eeu.jp|@apmail.org|@mail.com|@gmx.com|@aol.com" default="@gmail.com"/>
+		<setting id="fshare_username" type="text" label="[COLOR orange]ID mail:[/COLOR] [I][COLOR dimgrey]ví dụ: abc@gmail.com chỉ điền abc[/I][/COLOR]" default=""/>
+		<setting id="fshare_password" type="text" option="hidden" label="[COLOR orange]Mật khẩu:[/COLOR]" default=""/>
+		<setting id="account_code" type="text" label="[COLOR orange]Account Code:[/COLOR]" default=""/>
+
+		<setting label="[COLOR yellow]Thông tin VIP[/COLOR]" type="lsep"/>
+		<setting id="reset_code" type="number" label="[COLOR orange]VCODE:[/COLOR] [COLOR dimgrey][I]for vmf's user only[/COLOR][/I]" visible="false"/>
+		<setting id="user_vip_code" type="number" label="[COLOR orange]VMF Code:[/COLOR]" visible="false"/>
+
+		<setting label="[COLOR yellow]Tùy chọn[/COLOR]" type="lsep"/>
+		<setting id="backup_option_fshare" type="bool" label="Dùng tài khoản này để backup dữ liệu" default="false"/>
+
+		<setting label="[COLOR yellow]Thông tin hệ thống[/COLOR]" type="lsep"/>
+		<setting id="currentfsacc" type="text" visible="false" default="0"/>
+		<setting id="fs" type="text" visible="false" default="0"/>
+		<setting id="check" type="bool" visible="false" default="false"/>
+		<setting id="notif" type="text" visible="false" default="0"/>
+		<setting id="tokenfshare" type="text" visible="false" default="0"/>
+		<setting id="sessionfshare" type="text" visible="false" default="0"/>
+		<setting id="timelog" type="text" visible="false" default="0"/>
+		<setting type="text" id="subscene_cookie_value" visible="false" default=""/>
+		<setting type="text" id="subscene_user_agent" visible="false" default=""/>
+		<setting type="text" id="subscene_user_time" visible="false" default=""/>
+
+		<setting label="[COLOR yellow]Hỗ trợ[/COLOR]" type="lsep"/>
+		<setting type="action" label="[COLOR orange]Reset thông tin[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=_resetsetting_)" />
+		<setting type="action" label="[COLOR orange]BẢNG GIÁ TÀI KHOẢN FSHARE[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=_banggia_)" />
+		<setting type="action" label="[COLOR orange]HƯỚNG DẪN NHẬP TÀI KHOẢN FSHARE[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=_hdnhaptkfs_)" />
+	</category>
+
+	<!-- Cấu hình VMF -->
+	<category label="[COLOR yellow]Cấu hình VMF[/COLOR]">
+		<setting label="[COLOR yellow]Nguồn phim[/COLOR]" type="lsep"/>
+		<setting type="action" label="Chọn nguồn phim lẻ" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=select_source_phimle)" />
+		<setting type="action" label="Chọn nguồn phim bộ" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=select_source_phimbo)" />
+		<setting id="thuviencine_domain" type="text" label="ThuVienCine Domain" default="thuviencine.com" visible="true" />
+		<setting id="thuvienhd_domain" type="text" label="ThuVienHD Domain" default="thuvienhd.top" visible="true" />
+		<setting label="[COLOR yellow]Dịch vụ[/COLOR]" type="lsep"/>
+		<setting id="shorten_host" type="select" label="[COLOR orange]Chọn dịch vụ rút gọn link[/COLOR]" values="tinyurl.com|bitly.com|cutt.ly|tiny.cc|bom.so|t.ly|gg.gg" default="tinyurl.com"/>
+
+		<setting label="[COLOR yellow]Bảo mật[/COLOR]" type="lsep"/>
+		<setting id="lock_pin" type="text" option="hidden" label="Mã khoá thư mục [COLOR dimgrey]Mặc định: 0000[/COLOR]" default="0000"/>
+
+		<setting label="[COLOR yellow]Lịch sử &amp; Nội dung[/COLOR]" type="lsep"/>
+		<setting id="OnOffHistoryWatching" type="bool" label="Bật/Tắt lịch sử xem phim" default="true"/>
+		<setting id="view_xxx" type="bool" label="Hiển thị mục 18+" default="true"/>
+
+		<setting label="[COLOR yellow]Thông tin hệ thống[/COLOR]" type="lsep"/>
+		<setting id="last_cache_clear_date" type="text" label="Ngày xóa cache gần nhất" default="" visible="false"/>
+		<setting id="last_cache_links_clear_date" type="text" label="Ngày xóa cache link gần nhất" default="" visible="false"/>
+		<setting id="last_auto_clear_date" type="text" label="Ngày xóa cache tự động gần nhất" default="" visible="false"/>
+		<setting id="ace" type="bool" label="Sử dụng addon Plexus để play Acestream" default="false"/>
+		<setting id="disclaimer_agreed" type="bool" label="Disclaimer" default="false" visible="false"/>
+		<setting id="skin_prompt_shown" type="bool" label="Skin Prompt Shown" default="false" visible="false"/>
+		<setting id="checkDate" type="text" label="Check Update" default="" visible="false"/>
+		<setting id="urlinput" type="text" label="Url input" default="" visible="false"/>
+		<setting id="checkSetting" type="bool" label="check Setting Writeable" default="false" visible="false"/>
+		<setting id="version" type="text" label="version" default="" visible="false"/>
+		<setting id="show_new_features" type="bool" label="Hiển thị các chức năng mới" default="false" visible="false" />
+		<setting id="gochiase" type="bool" label="GocChiaSe" default="false" visible="false" />
+		<setting id="fsharesite_hdvietnam.xyz" type="bool" label="HDVietnam" default="false" visible="false" />
+		<setting id="fsharesite_thuviencine.com" type="bool" label="ThuVienCine" default="false" visible="false" />
+		<setting id="fsharesite_thuvienhd.top" type="bool" label="ThuVienHD" default="false" visible="false" />
+		<setting id="phimle_url" type="text" label="phimle_url" default="https://thuviencine.com/movies/" visible="false" />
+		<setting id="phimbo_url" type="text" label="phimbo_url" default="https://thuviencine.com/tv-series/" visible="false" />
+		<setting id="v11_36_update_seen" type="bool" default="false" visible="false"/>
+
+		<setting label="Last Deleted Date" type="date" id="last_deleted_date" default="0000-00-00" visible="false"/>
+	</category>
+
+	<!-- Tài khoản 4share -->
+	<category label="[COLOR yellow]Tài khoản 4share[/COLOR]">
+		<setting label="[COLOR yellow]Thông tin đăng nhập[/COLOR]" type="lsep"/>
+		<setting id="4share_username" type="text" label="[COLOR orange]E-mail hoặc tài khoản:[/COLOR]" default=""/>
+		<setting id="4share_password" type="text" option="hidden" label="[COLOR orange]Mật khẩu:[/COLOR]" default=""/>
+
+		<setting label="[COLOR yellow]Thông tin hệ thống[/COLOR]" type="lsep"/>
+		<setting id="session4s" type="text" visible="false" default="0"/>
+		<setting id="timelog4s" type="text" visible="false" default="0"/>
+
+		<setting label="[COLOR yellow]Hỗ trợ[/COLOR]" type="lsep"/>
+		<setting type="action" label="[COLOR orange]Kiểm tra tài khoản[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=get_user_information_fourshare)" />
+	</category>
+
+	<!-- Backup dữ liệu -->
+	<category label="[COLOR yellow]Backup dữ liệu[/COLOR]">
+		<setting label="[COLOR yellow]Thông tin đăng nhập[/COLOR]" type="lsep"/>
+		<setting id="domainforbackup" type="select" label="[COLOR orange]Chọn dịch vụ e-mail[/COLOR]" values="@gmail.com|@1share.xyz|@fshare.vip|@fshare.xyz|@kodi.vn|@vietmediaf.net|@hotmail.com|@yahoo.com|@outlook.com|@fshare.vn|@yandex.com|@icloud.com|@mail.com|@gmx.com|@aol.com" default="@gmail.com"/>
+		<setting id="username_backup" type="text" label="[COLOR orange]E-mail hoặc tài khoản:[/COLOR]" default=""/>
+		<setting id="password_backup" type="text" option="hidden" label="[COLOR orange]Mật khẩu:[/COLOR]" default=""/>
+
+		<setting label="[COLOR yellow]Thiết lập backup[/COLOR]" type="lsep"/>
+		<setting id="service.backup" type="select" label="[COLOR orange]Chọn dịch vụ lưu trữ[/COLOR]" values="4share|fshare" default="fshare"/>
+
+		<setting label="[COLOR yellow]Thao tác[/COLOR]" type="lsep"/>
+		<setting type="action" label="[COLOR yellow]Thực hiện backup ngay lập tức[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=__backup__)" />
+		<setting type="action" label="[COLOR yellow]Phục hổi bản lưu trữ[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=get_user_information_fourshare)" />
+	</category>
+
+	<!-- Tiện ích -->
+	<category label="[COLOR yellow]Tiện ích[/COLOR]">
+		<setting label="[COLOR yellow]Hệ thống[/COLOR]" type="lsep"/>
+		<setting type="action" label="[COLOR orange]View log[/COLOR]" option="close" action="RunPlugin(plugin://plugin.program.openwizard/?mode=viewerrorlog)" />
+		<setting type="action" label="[COLOR orange]Xóa cache[/COLOR]" option="close" action="ActivateWindow(10001,&quot;plugin://plugin.program.openwizard/?mode=maint&amp;name=clean&quot;)" />
+		<setting type="action" label="[COLOR orange]Thiết lập nâng cao[/COLOR]" option="close" action="RunPlugin(plugin://plugin.video.vietmediaF/?action=advanced_settings_menu)" />
+		<setting label="Khởi động cùng hệ thống" type="bool" id="chayvmf" default="false"/>
+		<setting id="download_path" type="folder" label="Thư mục lưu trữ file [COLOR dimgrey]Nhấn để thiết lập[/COLOR]"  default="" option="writeable" />
+		<setting id="download_sub" type="folder" label="Thư mục Subtitle"  default="" option="writeable" />
+		
+		<setting label="[COLOR yellow]Tùy chọn tải xuống[/COLOR]" type="lsep"/>
+		<setting id="download_method" type="enum" label="Phương thức hiển thị khi tải xuống" values="Thông báo đơn giản|Thanh tiến trình chi tiết" default="1"/>
+		<setting id="download_notification_interval" type="slider" label="Khoảng thời gian cập nhật (giây)" default="1" range="1,1,10" option="int" visible="eq(-1,0)"/>
+		<setting id="clear_cache_on_startup" type="bool" label="Xóa cache addon mỗi lần khởi động" default="false"/>
+
+		<setting label="[COLOR yellow]Quản lý Cache[/COLOR]" type="lsep"/>
+		<setting id="auto_clear_cache" type="bool" label="Tự động xóa cache cũ" default="true"/>
+		<setting id="cache_expiry_days" type="slider" label="Số ngày giữ cache" default="3" range="1,1,30" option="int" visible="eq(-1,true)"/>
+		<setting id="last_cache_cleanup" type="text" label="Lần xóa cache cuối" visible="false" default=""/>
+
+		<setting label="[COLOR yellow]Trình phát video[/COLOR]" type="lsep"/>
+		<setting id="external_player_enabled" type="bool" label="Sử dụng trình phát video ngoài" default="false" visible="true" />
+		<setting id="external_player_name" type="text" label="Tên trình phát video ngoài" default="" visible="false" />
+		<setting id="external_player_path" type="text" label="Đường dẫn trình phát video ngoài" default="" visible="false" />
+	</category>
+
+	<!-- Giao diện -->
+	<category label="[COLOR yellow]Giao diện[/COLOR]">
+		<setting label="[COLOR yellow]View_mode skin.arctic.zephyr.mod[/COLOR]" type="lsep"/>
+		<setting id="view_mode" type="bool" label="Sử dụng chế độ xem mặc định" default="true"/>
+		<setting id="view_mode_type" type="select" label="Kiểu hiển thị mặc định" values="netflix|biglist|bigposter|wide|posterwall|mediainfo|extrainfo|cards|bannerwall" default="netflix" visible="eq(-1,true)"/>
+	</category>
+</settings>
