@@ -134,8 +134,20 @@
 
 	<!-- Giao diện -->
 	<category label="[COLOR yellow]Giao diện[/COLOR]">
-		<setting label="[COLOR yellow]View_mode skin.arctic.zephyr.mod[/COLOR]" type="lsep"/>
-		<setting id="view_mode" type="bool" label="Sử dụng chế độ xem mặc định" default="true"/>
-		<setting id="view_mode_type" type="select" label="Kiểu hiển thị mặc định" values="netflix|biglist|bigposter|wide|posterwall|mediainfo|extrainfo|cards|bannerwall" default="netflix" visible="eq(-1,true)"/>
+		<setting label="[COLOR yellow]TMDB Search sử dụng List View[/COLOR]" type="lsep"/>
+		<setting id="tmdb_list_view" type="bool" label="Sử dụng List View cho TMDB Search" default="true"/>
+	</category>
+	
+	<!-- Bioidaika -->
+	<category label="[COLOR yellow]Bioidaika[/COLOR]">
+		<setting label="[COLOR yellow]TMDB API Configuration[/COLOR]" type="lsep"/>
+		<setting id="tmdb_api_key" type="text" label="TMDB API Key" default="91ffa0b976634f68d550969e0209de76"/>
+		<setting id="tmdb_language" type="select" label="Ngôn ngữ TMDB" values="vi-VN|en-US" default="vi-VN"/>
+		<setting id="tmdb_timeout" type="number" label="Timeout TMDB (giây)" default="10"/>
+		
+		<setting label="[COLOR yellow]Backend API Configuration[/COLOR]" type="lsep"/>
+		<setting id="backend_api_enabled" type="bool" label="Kích hoạt kiểm tra cache backend" default="true"/>
+		<setting id="backend_api_url" type="text" label="URL Backend API" default="https://bioidaika.click" visible="eq(-1,true)"/>
+		<setting id="backend_api_timeout" type="number" label="Timeout Backend (giây)" default="22" visible="eq(-2,true)"/>
 	</category>
 </settings>

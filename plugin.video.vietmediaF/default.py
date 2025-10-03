@@ -476,6 +476,12 @@ def timkiemMenu():
             "plot": "Tìm kiếm nội dung trên Fshare"
         },
         {
+            "label": "[COLOR yellow]Tìm kiếm TMDB[/COLOR]",
+            "path": "plugin://plugin.video.vietmediaF?action=tmdbsearch",
+            "icon": search_icon,
+            "plot": "Tìm kiếm phim và TV series qua TMDB API"
+        },
+        {
             "label": "[COLOR yellow]Tìm kiếm trên TVHD[/COLOR]",
             "path": "plugin://plugin.video.vietmediaF?action=__searchTVHD__",
             "icon": search_icon,
@@ -1212,6 +1218,18 @@ def play(data):
         TextBoxes(ADDON_NAME, content)
         return
 
+    # Xử lý FShare folder URL
+    if 'fshare' in link and 'folder' in link:
+        xbmc.log(f"[VietmediaF] Processing FShare folder URL: {link}", xbmc.LOGINFO)
+        data = cache_utils.cache_data(link)
+        if data is not None:
+            xbmc.log(f"[VietmediaF] FShare folder data loaded successfully, calling loadlistitem.list_item_main", xbmc.LOGINFO)
+            loadlistitem.list_item_main(data)
+        else:
+            xbmc.log(f"[VietmediaF] FShare folder data is None, showing error", xbmc.LOGERROR)
+            notify('Không thể tải danh sách folder')
+        return
+
     if 'vtvgo' in link:
         link = getlink.get(link)
         item = xbmcgui.ListItem(path=link)
@@ -1701,6 +1719,12 @@ def go():
         url = urllib_parse.unquote_plus(url)
         xbmc.log(f"[VietmediaF] Unquoted URL: {url}", xbmc.LOGINFO)
 
+    # Parse URL parameters
+    args = {}
+    if '?' in url:
+        query_string = url.split('?', 1)[1]
+        args = dict(urllib_parse.parse_qsl(query_string))
+
 
     if 'action=thuviencine_top' in url:
         data = thuviencine.get_thuviencine_top()
@@ -1933,6 +1957,29 @@ def go():
     if "__timkiem__" in url:
         timkiemMenu()
         exit()
+    if "tmdbsearch" in url:
+        tmdb_search.show_search_form()
+        exit()
+    if "tmdb_movie_detail" in url:
+        # Lấy tham số từ URL
+        tmdb_id = args.get('tmdb_id', '')
+        media_type = args.get('media_type', 'movie')
+        
+        if tmdb_id:
+            # Lấy thông tin chi tiết từ TMDB
+            movie_data = tmdb_search.get_movie_details(int(tmdb_id), media_type)
+            if movie_data:
+                # Lấy thông tin download từ backend
+                download_info = tmdb_search.get_backend_download_info(int(tmdb_id), media_type)
+                
+                # Hiển thị thông tin chi tiết
+                tmdb_search.display_movie_detail(movie_data, media_type, int(tmdb_id), download_info)
+            else:
+                xbmcgui.Dialog().ok('Lỗi', f'Không tìm thấy thông tin {media_type} với ID: {tmdb_id}')
+        else:
+            xbmcgui.Dialog().ok('Lỗi', 'Thiếu tham số TMDB ID')
+        exit()
+    
     if "_timtrenfshare_" in url:
 
         search_content('fshare')
@@ -2020,64 +2067,6 @@ def go():
                 loadlistitem.list_item_main(data)
             except Exception as e:
                 notify(f"Lỗi khi tìm kiếm: {str(e)}")
-
-    # TMDB Search Actions - Check specific actions first
-    if "_tmdbsearch_sources" in url:
-        log(f"[VietmediaF] TMDB Sources Debug: BẮT ĐẦU XỬ LÝ ACTION _tmdbsearch_sources")
-        try:
-            # Debug: In ra URL để kiểm tra
-            notify(f"URL: {url}")
-            log(f"[VietmediaF] TMDB Sources Debug: URL = {url}")
-            
-            # Lấy media_type và tmdb_id từ URL
-            media_type_match = re.search(r"media_type=([^&]*)", url)
-            tmdb_id_match = re.search(r"tmdb_id=([^&]*)", url)
-            
-            log(f"[VietmediaF] TMDB Sources Debug: media_type_match = {media_type_match}")
-            log(f"[VietmediaF] TMDB Sources Debug: tmdb_id_match = {tmdb_id_match}")
-            
-            if media_type_match and tmdb_id_match:
-                media_type = urllib_parse.unquote_plus(media_type_match.group(1))
-                tmdb_id = urllib_parse.unquote_plus(tmdb_id_match.group(1))
-                notify(f"Media Type: {media_type}, TMDB ID: {tmdb_id}")
-                log(f"[VietmediaF] TMDB Sources Debug: Parsed media_type = {media_type}, tmdb_id = {tmdb_id}")
-                
-                log(f"[VietmediaF] TMDB Sources Debug: Gọi tmdb_search.tmdb_search_sources")
-                data = tmdb_search.tmdb_search_sources(media_type, tmdb_id)
-                log(f"[VietmediaF] TMDB Sources Debug: Nhận được data = {data}")
-                
-                loadlistitem.list_item_main(data)
-            else:
-                notify("Thiếu thông tin media_type hoặc tmdb_id")
-                log(f"[VietmediaF] TMDB Sources Debug: Thiếu thông tin media_type hoặc tmdb_id")
-        except Exception as e:
-            notify(f"Lỗi khi tải nguồn: {str(e)}")
-            logError(f"[VietmediaF] TMDB Sources Debug: Lỗi = {str(e)}")
-        exit()
-
-    if "_tmdbsearch_" in url:
-        try:
-            data = tmdb_search.tmdb_search()
-            loadlistitem.list_item_main(data)
-        except Exception as e:
-            notify(f"Lỗi khi tìm kiếm TMDB: {str(e)}")
-        exit()
-
-    if "_tmdbsearch_vmf" in url:
-        try:
-            # Lấy vmf_code từ URL
-            vmf_match = re.search(r"vmf_code=([^&]+)", url)
-            if vmf_match:
-                vmf_code = vmf_match.group(1)
-                # Xử lý VMF code (có thể cần thêm logic xử lý)
-                notify(f"Đang xử lý VMF code: {vmf_code}")
-                # TODO: Implement VMF code processing
-            else:
-                notify("Thiếu VMF code")
-        except Exception as e:
-            notify(f"Lỗi khi xử lý VMF code: {str(e)}")
-        exit()
-
 
     if "__searchTVHD__" in url:
 
@@ -2379,7 +2368,7 @@ def go():
         data = {"url": "", "subtitle": ""}
         data.update({"url": link, "subtitle": subtitle})
         play(data)
-    elif '4share.vn/f/' in url or'fshare.vn/file/' in url or 'ok.ru' in url or 'drive.google.com' in url:
+    elif '4share.vn/f/' in url or 'fshare.vn/file/' in url or 'fshare.vn/folder/' in url or 'ok.ru' in url or 'drive.google.com' in url:
         regex = r"url=(.+)"
         match = re.search(regex, url)
         links = match.group(1)
@@ -2406,11 +2395,12 @@ def go():
         else:
             alert("Lỗi mục xác định link 02. Báo dev xử lí :-((")
             exit()
-    elif 'fshare' in url and 'folder' in url:
-        data = cache_utils.cache_data(url)
-        if data is not None:
-            loadlistitem.list_item_main(data)
-        return
+    # Xóa bỏ xử lý FShare folder riêng biệt - để action play xử lý
+    # elif 'fshare' in url and 'folder' in url:
+    #     data = cache_utils.cache_data(url)
+    #     if data is not None:
+    #         loadlistitem.list_item_main(data)
+    #     return
 
 
     elif "docs.google.com" in url:

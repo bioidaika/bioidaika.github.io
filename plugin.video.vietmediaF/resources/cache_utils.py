@@ -177,14 +177,15 @@ def cache_data(url):
         Dữ liệu từ cache hoặc từ URL nếu cache không tồn tại hoặc hết hạn
     """
 
-    cache_key = hashlib.md5(url.encode()).hexdigest()
-
-
-    if check_cache(cache_key):
-        data = get_cache(cache_key)
-        if data:
-            return data
-        #logError("Cache không có dữ liệu")
+    # Chỉ tạo cache_key chung cho các URL không phải FShare folder
+    if 'fshare' not in url or 'folder' not in url:
+        cache_key = hashlib.md5(url.encode()).hexdigest()
+        
+        if check_cache(cache_key):
+            data = get_cache(cache_key)
+            if data:
+                return data
+            #logError("Cache không có dữ liệu")
 
 
     if "docs.google.com" in url:
@@ -214,12 +215,17 @@ def cache_data(url):
                 return None
         else:
             try:
-                regex = r"url=(.+)"
-                match = re.search(regex, url)
-                if not match:
-                    logError("Không tìm thấy URL trong: " + url)
-                    return None
-                link = match.group(1)
+                # Kiểm tra nếu URL đã là FShare URL trực tiếp
+                if url.startswith('https://www.fshare.vn/folder/'):
+                    link = url
+                else:
+                    # Tìm URL trong parameter
+                    regex = r"url=(.+)"
+                    match = re.search(regex, url)
+                    if not match:
+                        logError("Không tìm thấy URL trong: " + url)
+                        return None
+                    link = match.group(1)
 
 
                 page_match = re.search(r"page=(\d+)", url)
@@ -238,9 +244,15 @@ def cache_data(url):
 
 
 
-        # Tạo cache key an toàn cho Windows (loại bỏ ký tự không hợp lệ)
-        safe_link = link.replace('https:', '').replace('http:', '').replace('/', '_').replace(':', '_')
-        folder_cache_key = f"fshare_folder_{safe_link}"
+        # Extract folder code from URL for safe cache key
+        folder_code = link.split('/')[-1] if '/' in link else link
+        folder_cache_key = f"fshare_folder_{folder_code}"
+        
+        # Check cache first
+        if check_cache(folder_cache_key, 30):
+            cache_data = get_cache(folder_cache_key)
+            if cache_data:
+                return cache_data
 
         data = fshare.fsharegetFolder(link)
         if data:
@@ -484,32 +496,6 @@ def clear_all_addon_cache():
 
     return total_deleted
 
-def clear_tmdb_cache():
-    """Xóa cache TMDB search"""
-    from resources.lib.constants import PROFILE_PATH
-    
-    tmdb_cache_dir = os.path.join(PROFILE_PATH, 'tmdb_cache')
-    
-    if not os.path.exists(tmdb_cache_dir):
-        return 0
-    
-    deleted_count = 0
-    
-    try:
-        files = os.listdir(tmdb_cache_dir)
-        for file_name in files:
-            file_path = os.path.join(tmdb_cache_dir, file_name)
-            if os.path.isfile(file_path):
-                try:
-                    os.remove(file_path)
-                    deleted_count += 1
-                except Exception as e:
-                    logError(f"Lỗi khi xóa file TMDB cache {file_path}: {str(e)}")
-    except Exception as e:
-        logError(f"Lỗi khi xóa cache TMDB: {str(e)}")
-    
-    return deleted_count
-
 def clear_cache_manual():
     """Hàm xóa cache khi người dùng chọn từ menu"""
 
@@ -522,13 +508,10 @@ def clear_cache_manual():
         progress.update(0, "VietmediaF", "Xóa cache link...")
         deleted_links = clear_cache_links()
 
-        progress.update(25, "VietmediaF", "Xóa cache addon...")
+        progress.update(50, "VietmediaF", "Xóa cache addon...")
         deleted_addon = clear_addon_cache()
 
-        progress.update(75, "VietmediaF", "Xóa cache TMDB...")
-        deleted_tmdb = clear_tmdb_cache()
-
-        total_deleted = deleted_links + deleted_addon + deleted_tmdb
+        total_deleted = deleted_links + deleted_addon
         progress.update(100, "VietmediaF", "Hoàn tất!")
 
 

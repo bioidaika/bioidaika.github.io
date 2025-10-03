@@ -29,6 +29,8 @@ next_icon = xbmcvfs.translatePath(os.path.join(ADDON_PATH, 'resources', 'images'
 fvideo_icon = xbmcvfs.translatePath(os.path.join(ADDON_PATH, 'resources', 'images', 'fsvideo.png'))
 
 
+
+
 def create_session():
     session = requests.Session()
 
@@ -399,7 +401,7 @@ def fsharegetFolder(url):
     payload = json.dumps({
         "token": token,
         "url": url,
-        "dirOnly": 0,  # 0 = cả file và folder, 1 = chỉ folder
+        "dirOnly": 0,
         "pageIndex": page_index,  
         "limit": 100
     })
@@ -424,41 +426,24 @@ def fsharegetFolder(url):
 
         try:
             f_items = json.loads(r.content)
-            log(f"[VietmediaF] Fshare Folder: API trả về {len(f_items) if f_items else 0} items")
-            if f_items:
-                for i, item in enumerate(f_items[:3]):  # Log 3 items đầu tiên
-                    log(f"[VietmediaF] Fshare Folder: Item {i+1}: {item.get('name', 'Unknown')} (type: {item.get('type', 'Unknown')})")
         except json.JSONDecodeError as e:
             pDialog.close()
             alert(f"Lỗi parse JSON: {str(e)}")
             return {"content_type": "movies", "items": []}
 
         if not f_items or len(f_items) == 0:
-            log(f"[VietmediaF] Fshare Folder: Không có items, thử với dirOnly=1")
-            # Thử lại với dirOnly=1 để chỉ lấy folder
-            payload_dir_only = json.dumps({
-                "token": token,
-                "url": url,
-                "dirOnly": 1,  # Chỉ lấy folder
-                "pageIndex": page_index,  
-                "limit": 100
-            })
-            
-            try:
-                r_dir = session.post("https://api.fshare.vn/api/fileops/getFolderList", headers=headers, data=payload_dir_only, verify=False)
-                if r_dir.status_code == 200:
-                    f_items = json.loads(r_dir.content)
-                    log(f"[VietmediaF] Fshare Folder: Với dirOnly=1, API trả về {len(f_items) if f_items else 0} items")
-                    if f_items:
-                        for i, item in enumerate(f_items[:3]):
-                            log(f"[VietmediaF] Fshare Folder: Item {i+1}: {item.get('name', 'Unknown')} (type: {item.get('type', 'Unknown')})")
-            except Exception as e:
-                logError(f"[VietmediaF] Fshare Folder: Lỗi khi thử dirOnly=1: {str(e)}")
-            
-            if not f_items or len(f_items) == 0:
-                pDialog.close()
-                notify("Thư mục trống hoặc không có quyền truy cập")
-                return {"content_type": "movies", "items": []}
+            pDialog.close()
+            # Hiển thị thông báo khi folder rỗng
+            empty_item = {
+                "label": "[COLOR yellow]Thư mục trống[/COLOR]",
+                "is_playable": False,
+                "path": "",
+                "thumbnail": f_icon,
+                "icon": f_icon,
+                "label2": "Không có file hoặc thư mục nào",
+                "info": {'plot': 'Thư mục này không chứa file hoặc thư mục con nào'}
+            }
+            return {"content_type": "movies", "items": [empty_item]}
 
         items = []
         for f_item in f_items:
@@ -470,19 +455,33 @@ def fsharegetFolder(url):
             full_url = f"https://www.fshare.vn/{'folder' if f_item['type'] == '0' else 'file'}/{linkcode}"
 
             if f_item["type"] == "0":
+                # Folder - hiển thị danh sách nội dung khi click
                 link = ('plugin://plugin.video.vietmediaF?action=play&url=https://www.fshare.vn/folder/%s' % linkcode)
                 playable = False
+                item_type = "folder"
+                item_icon = f_icon
             else:
+                # File - phát trực tiếp khi click
                 link = ('plugin://plugin.video.vietmediaF?action=play&url=https://www.fshare.vn/file/%s' % linkcode)
                 playable = True
+                item_type = "file"
+                item_icon = f_icon
 
-            item["label"] = name
+            # Tạo label với icon để phân biệt folder và file
+            if item_type == "folder":
+                display_label = f"[COLOR lightblue]📁 {name}[/COLOR]"
+                plot_text = f"Thư mục: {name}\nKích thước: {size}"
+            else:
+                display_label = f"[COLOR lightgreen]📄 {name}[/COLOR]"
+                plot_text = f"File: {name}\nKích thước: {size}"
+
+            item["label"] = display_label
             item["is_playable"] = playable
             item["path"] = link
-            item["thumbnail"] = f_icon
-            item["icon"] = f_icon
+            item["thumbnail"] = item_icon
+            item["icon"] = item_icon
             item["label2"] = name
-            item["info"] = {'plot': folder_description if folder_description else name, 'size': size}
+            item["info"] = {'plot': plot_text, 'size': size}
             items.append(item)
 
         

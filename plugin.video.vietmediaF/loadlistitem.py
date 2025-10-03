@@ -26,70 +26,6 @@ def debug(text):
             f.write(text.encode("UTF-8"))
             
 
-def apply_info_to_listitem(list_item, info_dict):
-    """Apply video metadata using InfoTagVideo (Kodi v20+). Fallback to setInfo on error.
-    Also mirrors key fields via setInfo so skins (e.g., Estuary) render duration/premiered in plugin directories.
-    """
-    try:
-        tag = list_item.getVideoInfoTag()
-        media_type = info_dict.get('mediatype')
-        if media_type:
-            tag.setMediaType(media_type)
-        title = info_dict.get('title')
-        if title:
-            tag.setTitle(title)
-        original_title = info_dict.get('originaltitle')
-        if original_title:
-            tag.setOriginalTitle(original_title)
-        year = info_dict.get('year')
-        if year:
-            try:
-                tag.setYear(int(year))
-            except Exception:
-                pass
-        plot = info_dict.get('plot')
-        if plot:
-            tag.setPlot(plot)
-        duration = info_dict.get('duration')
-        if duration:
-            try:
-                tag.setDuration(int(duration))
-            except Exception:
-                pass
-        rating = info_dict.get('rating')
-        if rating is not None:
-            try:
-                tag.setRating(float(rating))
-            except Exception:
-                pass
-        votes = info_dict.get('votes')
-        if votes:
-            try:
-                tag.setVotes(int(votes))
-            except Exception:
-                pass
-        tvshowtitle = info_dict.get('tvshowtitle')
-        if tvshowtitle:
-            tag.setTvShowTitle(tvshowtitle)
-        # Mirror minimal keys for skin display in directory views
-        minimal = {}
-        if duration:
-            try:
-                minimal['duration'] = int(duration)
-            except Exception:
-                pass
-        premiered = info_dict.get('premiered')
-        if premiered:
-            minimal['premiered'] = premiered
-        if year:
-            minimal['year'] = int(year) if isinstance(year, int) or (isinstance(year, str) and year.isdigit()) else year
-        if minimal:
-            list_item.setInfo('video', minimal)
-    except Exception as e:
-        xbmc.log(f"[VietmediaF] InfoTagVideo apply failed, fallback to setInfo: {e}", xbmc.LOGINFO)
-        list_item.setInfo("video", info_dict)
-
-
 def check_lock(item_path):
 
     filename = os.path.join(PROFILE_PATH, 'lock_dir.dat')
@@ -123,13 +59,13 @@ def list_item_main(data):
                 path = 'plugin://plugin.video.vietmediaF?action=browse&node_id=75'
                 
             else:
-                # listItem = xbmcgui.ListItem(label=label, label2=item["label2"], iconimage=item["icon"], thumbnailImage=item["thumbnail"]) 
-                listItem = xbmcgui.ListItem(label=label, label2=item["label2"]) 
+                # listItem = xbmcgui.ListItem(label=label, label2=item["label2"], iconimage=item["icon"], thumbnailImage=item["thumbnail"])
+                listItem = xbmcgui.ListItem(label=label, label2=item["label2"])
         if VIEWXXX == 'true':
             listItem = xbmcgui.ListItem(label=label, label2=item["label2"])
 
         if item.get("info"):
-            apply_info_to_listitem(listItem, item["info"]) 
+            listItem.setInfo("video", item["info"])
         
         if item.get("art"):
             listItem.setArt(item["art"])
@@ -142,7 +78,7 @@ def list_item_main(data):
         title = re.sub('\s', '-', title)
         title = re.sub('--', '-', title)
         title = re.sub('--', '-', title)
-        title = re.sub('[\\/*?:"<>|#]', "", title)
+        title = re.sub('[\\\\/*?:"<>|#]', "", title)
         title = remove_accents.remove_accents(title)
         if item.get("context_menu"):
             listItem.addContextMenuItems(item["context_menu"])
@@ -182,7 +118,14 @@ def list_item_main(data):
             xbmc.executebuiltin("Container.SetViewMode(528)")
         else:
             xbmc.log(f"[VietmediaF] Using viewmode {VIEWMODE}", xbmc.LOGINFO)
-    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+    
+    # Sử dụng addDirectoryItem thay vì addDirectoryItems cho FShare folder
+    for path, listItem, isFolder in listitems:
+        # Đảm bảo FShare folder được coi là folder
+        if 'fshare' in path and 'folder' in path:
+            xbmcplugin.addDirectoryItem(HANDLE, path, listItem, True)
+        else:
+            xbmcplugin.addDirectoryItem(HANDLE, path, listItem, isFolder)
     xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
 
 def list_item_main_cache(data):
@@ -191,7 +134,7 @@ def list_item_main_cache(data):
     items = data["items"]
     for item in items:
         list_item = xbmcgui.ListItem(label=item["label"])
-        apply_info_to_listitem(list_item, item["info"]) 
+        list_item.setInfo('video', item["info"])
         list_item.setArt({'thumb': item["thumbnail"], 'icon': item["icon"]})
         list_item.setProperty('IsPlayable', 'true' if item["is_playable"] else 'false')
         xbmcplugin.addDirectoryItem(handle=HANDLE, url=item["path"], listitem=list_item, isFolder=not item["is_playable"])
@@ -220,9 +163,9 @@ def list_item(data):
         if check_lock(lock_url):
             label = "*" + label
         listItem = xbmcgui.ListItem(
-            label=label, label2=item["label2"]) 
+            label=label, label2=item["label2"])
         if item.get("info"):
-            apply_info_to_listitem(listItem, item["info"]) 
+            listItem.setInfo("video", item["info"])
         if item.get("stream_info"):
             for type_, values in item["stream_info"].items():
                 listItem.addStreamInfo(type_, values)
@@ -232,11 +175,11 @@ def list_item(data):
         listItem.setArt({'thumb': item["thumbnail"], 'icon': item["thumbnail"], 'poster': item["icon"]})
         menu_context = []
         if item.get("context_menu"):
-            listItem.addContextMenuItems(item["context_menu"]) 
+            listItem.addContextMenuItems(item["context_menu"])
         if "fshare" in path:
-            command = 'RunPlugin(%s&d=__addtofav__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__addtofav__)' % (item["path"])
             menu_context.append(('Thêm vào Yêu Thích Fshare', command,))
-            command = 'RunPlugin(%s&d=__removeFromfav__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeFromfav__)' % (item["path"])
             menu_context.append(('Xoá Yêu Thích Fshare', command,))
             command = 'RunPlugin(%s&d=__lock__)' % item["path"]
             menu_context.append(('Khoá mục này', command,))
@@ -244,14 +187,14 @@ def list_item(data):
             menu_context.append(('Mở khoá mục này', command,))
             command = 'RunPlugin(%s&d=__qrlink__)' % item["path"]
             menu_context.append(('[COLOR yellow]QR Link[/COLOR]', command,))
-            command = 'RunPlugin(%s&d=__removeHistory__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeHistory__)' % (item["path"])
             menu_context.append(('Xoá lịch sử dòng này', command,))
-            command = 'RunPlugin(%s&d=__removeAllHistory__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeAllHistory__)' % (item["path"])
             menu_context.append(('Xoá tất cả lịch sử', command,))
         else:
-            command = 'RunPlugin(%s&d=__removeHistory__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeHistory__)' % (item["path"])
             menu_context.append(('Xoá lịch sử dòng này', command,))
-            command = 'RunPlugin(%s&d=__removeAllHistory__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeAllHistory__)' % (item["path"])
             menu_context.append(('Xoá tất cả lịch sử', command,))
             command = 'RunPlugin(%s&d=__lock__)' % item["path"]
             menu_context.append(('Khoá mục này', command,))
@@ -264,11 +207,10 @@ def list_item(data):
         if item.get("properties"):
             for k, v in item["properties"].items():
                 listItem.setProperty(k, v)
-        listitems[i] = (path, listItem, not item["is_playable"]) 
+        listitems[i] = (path, listItem, not item["is_playable"])
     
     xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
     xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
-
 def list_item_watched_history(data):
     if data.get("content_type") and len(data["content_type"]) > 0:
         xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
@@ -290,10 +232,10 @@ def list_item_watched_history(data):
         if check_lock(lock_url):
             label = "*" + label
         listItem = xbmcgui.ListItem(
-            #label=label, label2=item["label2"], iconImage=item["icon"], thumbnailImage=item["thumbnail"]) 
-            label=label, label2=item["label2"]) 
+            #label=label, label2=item["label2"], iconImage=item["icon"], thumbnailImage=item["thumbnail"])
+            label=label, label2=item["label2"])
         if item.get("info"):
-            apply_info_to_listitem(listItem, item["info"]) 
+            listItem.setInfo("video", item["info"])
         if item.get("stream_info"):
             for type_, values in item["stream_info"].items():
                 listItem.addStreamInfo(type_, values)
@@ -303,13 +245,13 @@ def list_item_watched_history(data):
         listItem.setArt({'thumb': item["thumbnail"], 'icon': item["thumbnail"], 'poster': item["icon"]})
         menu_context = []
         if item.get("context_menu"):
-            listItem.addContextMenuItems(item["context_menu"]) 
-        command = 'RunPlugin(%s&d=__removeAllWatchedHistory__)' % (item["path"]) 
+            listItem.addContextMenuItems(item["context_menu"])
+        command = 'RunPlugin(%s&d=__removeAllWatchedHistory__)' % (item["path"])
         menu_context.append(('[COLOR yellow]Xoá lịch sử xem phim[/COLOR]', command,))
         if "fshare" in path:
-            command = 'RunPlugin(%s&d=__addtofav__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__addtofav__)' % (item["path"])
             menu_context.append(('Thêm vào Yêu Thích Fshare', command,))
-            command = 'RunPlugin(%s&d=__removeFromfav__)' % (item["path"]) 
+            command = 'RunPlugin(%s&d=__removeFromfav__)' % (item["path"])
             menu_context.append(('Xoá Yêu Thích Fshare', command,))
         
         command = 'RunPlugin(%s&d=__lock__)' % item["path"]
@@ -325,11 +267,10 @@ def list_item_watched_history(data):
         if item.get("properties"):
             for k, v in item["properties"].items():
                 listItem.setProperty(k, v)
-        listitems[i] = (path, listItem, not item["is_playable"]) 
+        listitems[i] = (path, listItem, not item["is_playable"])
     
     xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
     xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
-
 def list_item_search_history(data):
     if data.get("content_type") and len(data["content_type"]) > 0:
         xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
@@ -351,10 +292,10 @@ def list_item_search_history(data):
         if check_lock(lock_url):
             label = "*" + label
         listItem = xbmcgui.ListItem(
-            #label=label, label2=item["label2"], iconImage=item["icon"], thumbnailImage=item["thumbnail"]) 
-            label=label, label2=item["label2"]) 
+            #label=label, label2=item["label2"], iconImage=item["icon"], thumbnailImage=item["thumbnail"])
+            label=label, label2=item["label2"])
         if item.get("info"):
-            apply_info_to_listitem(listItem, item["info"]) 
+            listItem.setInfo("video", item["info"])
         if item.get("stream_info"):
             for type_, values in item["stream_info"].items():
                 listItem.addStreamInfo(type_, values)
@@ -366,7 +307,7 @@ def list_item_search_history(data):
         if item.get("properties"):
             for k, v in item["properties"].items():
                 listItem.setProperty(k, v)
-        listitems[i] = (path, listItem, not item["is_playable"]) 
+        listitems[i] = (path, listItem, not item["is_playable"])
     
     xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
     xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
