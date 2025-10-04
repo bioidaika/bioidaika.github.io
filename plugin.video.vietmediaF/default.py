@@ -482,6 +482,18 @@ def timkiemMenu():
             "plot": "Tìm kiếm phim và TV series qua TMDB API"
         },
         {
+            "label": "[COLOR yellow]Phim Trending TMDB[/COLOR]",
+            "path": "plugin://plugin.video.vietmediaF?action=tmdb_trending&type=movies",
+            "icon": search_icon,
+            "plot": "Phim trending từ TMDB API (theo setting)"
+        },
+        {
+            "label": "[COLOR yellow]TV Trending TMDB[/COLOR]",
+            "path": "plugin://plugin.video.vietmediaF?action=tmdb_trending&type=tv",
+            "icon": search_icon,
+            "plot": "TV series trending từ TMDB API (theo setting)"
+        },
+        {
             "label": "[COLOR yellow]Tìm kiếm trên TVHD[/COLOR]",
             "path": "plugin://plugin.video.vietmediaF?action=__searchTVHD__",
             "icon": search_icon,
@@ -1964,6 +1976,69 @@ def go():
         except Exception as e:
             xbmc.log(f"[VietmediaF] Error calling show_search_form: {str(e)}", xbmc.LOGERROR)
             alert(f"Lỗi gọi show_search_form: {str(e)}")
+        exit()
+    if "tmdb_trending_movies" in url:
+        xbmc.log(f"[VietmediaF] Calling tmdb_search.show_trending_movies()", xbmc.LOGINFO)
+        try:
+            # Lấy tham số time_window từ URL (mặc định là 'day')
+            time_window = args.get('time_window', ['day'])[0] if args.get('time_window') else 'day'
+            # Lấy tham số page từ URL (mặc định là 1)
+            page = int(args.get('page', ['1'])[0]) if args.get('page') else 1
+            tmdb_search.show_trending_movies(time_window, page)
+        except Exception as e:
+            xbmc.log(f"[VietmediaF] Error calling show_trending_movies: {str(e)}", xbmc.LOGERROR)
+            alert(f"Lỗi gọi show_trending_movies: {str(e)}")
+        exit()
+    if "tmdb_trending_tv" in url:
+        xbmc.log(f"[VietmediaF] Calling tmdb_search.show_trending_tv()", xbmc.LOGINFO)
+        try:
+            # Lấy tham số time_window từ URL (mặc định là 'day')
+            time_window = args.get('time_window', ['day'])[0] if args.get('time_window') else 'day'
+            # Lấy tham số page từ URL (mặc định là 1)
+            page = int(args.get('page', ['1'])[0]) if args.get('page') else 1
+            tmdb_search.show_trending_tv(time_window, page)
+        except Exception as e:
+            xbmc.log(f"[VietmediaF] Error calling show_trending_tv: {str(e)}", xbmc.LOGERROR)
+            alert(f"Lỗi gọi show_trending_tv: {str(e)}")
+        exit()
+    if "tmdb_trending" in url:
+        xbmc.log(f"[VietmediaF] Calling tmdb_search.show_trending_unified()", xbmc.LOGINFO)
+        try:
+            # Lấy tham số type từ URL (mặc định là 'movies')
+            media_type = args.get('type', ['movies'])[0] if args.get('type') else 'movies'
+            # Lấy tham số page từ URL (mặc định là 1)
+            page = int(args.get('page', ['1'])[0]) if args.get('page') else 1
+            tmdb_search.show_trending_unified(media_type, page)
+        except Exception as e:
+            xbmc.log(f"[VietmediaF] Error calling show_trending_unified: {str(e)}", xbmc.LOGERROR)
+            alert(f"Lỗi gọi show_trending_unified: {str(e)}")
+        exit()
+    if "tmdb_trending_goto_page" in url:
+        xbmc.log(f"[VietmediaF] Calling tmdb_trending_goto_page", xbmc.LOGINFO)
+        try:
+            # Lấy tham số từ URL
+            time_window = args.get('time_window', ['day'])[0] if args.get('time_window') else 'day'
+            current_page = int(args.get('current_page', ['1'])[0]) if args.get('current_page') else 1
+            total_pages = int(args.get('total_pages', ['1'])[0]) if args.get('total_pages') else 1
+            
+            # Hiển thị dialog nhập trang
+            page_dialog = xbmcgui.Dialog()
+            page_input = page_dialog.input(f"Nhập số trang (1-{total_pages}):", str(current_page), xbmcgui.INPUT_NUMERIC)
+            
+            if page_input:
+                try:
+                    target_page = int(page_input)
+                    if 1 <= target_page <= total_pages:
+                        # Chuyển đến trang đã chọn
+                        goto_url = f"plugin://plugin.video.vietmediaF?action=tmdb_trending_movies&time_window={time_window}&page={target_page}"
+                        xbmc.executebuiltin(f"Container.Update({goto_url})")
+                    else:
+                        alert(f"Số trang phải từ 1 đến {total_pages}")
+                except ValueError:
+                    alert("Vui lòng nhập số hợp lệ")
+        except Exception as e:
+            xbmc.log(f"[VietmediaF] Error calling tmdb_trending_goto_page: {str(e)}", xbmc.LOGERROR)
+            alert(f"Lỗi chuyển trang: {str(e)}")
         exit()
     if "tmdb_movie_detail" in url:
         # Lấy tham số từ URL
