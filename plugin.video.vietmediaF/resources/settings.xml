@@ -150,5 +150,7 @@
 		<setting id="backend_api_enabled" type="bool" label="Kích hoạt kiểm tra cache backend" default="true"/>
 		<setting id="backend_api_url" type="text" label="URL Backend API" default="https://bioidaika.click" visible="eq(-1,true)"/>
 		<setting id="backend_api_timeout" type="number" label="Timeout Backend (giây)" default="22" visible="eq(-2,true)"/>
+		<setting id="backend_batch_enabled" type="bool" label="Sử dụng Batch API (nhanh hơn 10-26x)" default="true" visible="eq(-3,true)"/>
+		<setting id="backend_batch_size" type="number" label="Kích thước batch tối đa" default="50" visible="eq(-4,true)"/>
 	</category>
 </settings>

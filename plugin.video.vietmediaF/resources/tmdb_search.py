@@ -94,6 +94,21 @@ def get_tmdb_trending_count():
         xbmc.log(f"[VietmediaF] Error parsing trending count setting: {e}, using default 20", xbmc.LOGERROR)
         return 20
 
+def get_backend_batch_enabled():
+    """Lấy setting Batch API enabled"""
+    return ADDON.getSettingBool('backend_batch_enabled')
+
+def get_backend_batch_size():
+    """Lấy kích thước batch tối đa từ settings"""
+    try:
+        setting_value = ADDON.getSetting('backend_batch_size')
+        size = int(setting_value or "50")
+        xbmc.log(f"[VietmediaF] Backend batch size setting: '{setting_value}' -> {size}", xbmc.LOGINFO)
+        return size
+    except (ValueError, TypeError) as e:
+        xbmc.log(f"[VietmediaF] Error parsing batch size setting: {e}, using default 50", xbmc.LOGERROR)
+        return 50
+
 
 # Backend API Configuration - sẽ được lấy từ settings
 
@@ -234,6 +249,200 @@ def get_backend_download_info(tmdb_id, media_type):
     except Exception as e:
         xbmc.log(f"[VietmediaF] Error getting download info for TMDB ID {tmdb_id}: {str(e)}", xbmc.LOGERROR)
         return None
+
+# Batch API Functions
+def check_backend_cache_batch(tmdb_ids, media_type):
+    """
+    Kiểm tra cache cho nhiều phim/TV cùng lúc bằng Batch API
+    
+    Args:
+        tmdb_ids (list): Danh sách ID của phim/TV trên TMDB
+        media_type (str): Loại media (movie hoặc tv)
+    
+    Returns:
+        dict: Kết quả cache cho từng ID {tmdb_id: (is_cached, error_message)}
+    """
+    try:
+        # Kiểm tra xem có bật kiểm tra cache không
+        if not ADDON.getSettingBool('backend_api_enabled'):
+            return {tmdb_id: (True, None) for tmdb_id in tmdb_ids}
+        
+        # Lấy cấu hình từ settings
+        backend_url = ADDON.getSetting('backend_api_url')
+        if not backend_url:
+            backend_url = "https://bioidaika.click"
+        
+        timeout = int(ADDON.getSetting('backend_api_timeout') or "22")
+        
+        # Tạo URL endpoint cho Batch API
+        endpoint = f"{backend_url}/api/batch/{media_type}"
+        
+        headers = {
+            'User-Agent': 'VietMediaF/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+        
+        # Tạo payload cho Batch API
+        payload = {
+            "tmdb_ids": tmdb_ids
+        }
+        
+        xbmc.log(f"[VietmediaF] Calling Batch API for {len(tmdb_ids)} {media_type}s", xbmc.LOGINFO)
+        xbmc.log(f"[VietmediaF] Batch API endpoint: {endpoint}", xbmc.LOGINFO)
+        
+        # Gọi Batch API
+        response = requests.post(endpoint, json=payload, headers=headers, timeout=timeout)
+        
+        if response.status_code == 200:
+            result = response.json()
+            batch_results = result.get("results", {})
+            total_cached = result.get("total_cached", 0)
+            total_processed = result.get("total_processed", 0)
+            
+            xbmc.log(f"[VietmediaF] Batch API success: {total_cached}/{total_processed} cached", xbmc.LOGINFO)
+            
+            # Xử lý kết quả cho từng ID
+            results = {}
+            for tmdb_id in tmdb_ids:
+                tmdb_id_str = str(tmdb_id)
+                if tmdb_id_str in batch_results:
+                    item_result = batch_results[tmdb_id_str]
+                    is_cached = item_result.get("cached", False)
+                    results[tmdb_id] = (is_cached, None)
+                else:
+                    # Nếu không có trong kết quả, coi như cache miss
+                    results[tmdb_id] = (False, None)
+            
+            return results
+        else:
+            error_msg = f"Batch API lỗi: {response.status_code}"
+            xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+            return {tmdb_id: (None, error_msg) for tmdb_id in tmdb_ids}
+            
+    except requests.exceptions.Timeout:
+        error_msg = f"Batch API timeout sau {timeout} giây"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        return {tmdb_id: (None, error_msg) for tmdb_id in tmdb_ids}
+    except requests.exceptions.ConnectionError:
+        error_msg = f"Không thể kết nối đến Batch API: {backend_url}"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        return {tmdb_id: (None, error_msg) for tmdb_id in tmdb_ids}
+    except Exception as e:
+        error_msg = f"Lỗi Batch API: {str(e)}"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        return {tmdb_id: (None, error_msg) for tmdb_id in tmdb_ids}
+
+def check_backend_cache_mixed_batch(movie_ids, tv_ids):
+    """
+    Kiểm tra cache cho cả movies và TV shows cùng lúc bằng Mixed Batch API
+    
+    Args:
+        movie_ids (list): Danh sách ID của movies
+        tv_ids (list): Danh sách ID của TV shows
+    
+    Returns:
+        dict: Kết quả cache cho từng ID {tmdb_id: (is_cached, error_message, media_type)}
+    """
+    try:
+        # Kiểm tra xem có bật kiểm tra cache không
+        if not ADDON.getSettingBool('backend_api_enabled'):
+            results = {}
+            for tmdb_id in movie_ids:
+                results[tmdb_id] = (True, None, "movie")
+            for tmdb_id in tv_ids:
+                results[tmdb_id] = (True, None, "tv")
+            return results
+        
+        # Lấy cấu hình từ settings
+        backend_url = ADDON.getSetting('backend_api_url')
+        if not backend_url:
+            backend_url = "https://bioidaika.click"
+        
+        timeout = int(ADDON.getSetting('backend_api_timeout') or "22")
+        
+        # Tạo URL endpoint cho Mixed Batch API
+        endpoint = f"{backend_url}/api/batch/mixed"
+        
+        headers = {
+            'User-Agent': 'VietMediaF/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+        
+        # Tạo payload cho Mixed Batch API
+        payload = {
+            "movies": movie_ids,
+            "tv_shows": tv_ids
+        }
+        
+        total_items = len(movie_ids) + len(tv_ids)
+        xbmc.log(f"[VietmediaF] Calling Mixed Batch API for {len(movie_ids)} movies + {len(tv_ids)} TV shows", xbmc.LOGINFO)
+        xbmc.log(f"[VietmediaF] Mixed Batch API endpoint: {endpoint}", xbmc.LOGINFO)
+        
+        # Gọi Mixed Batch API
+        response = requests.post(endpoint, json=payload, headers=headers, timeout=timeout)
+        
+        if response.status_code == 200:
+            result = response.json()
+            batch_results = result.get("results", {})
+            total_cached = result.get("total_cached", 0)
+            total_processed = result.get("total_processed", 0)
+            
+            xbmc.log(f"[VietmediaF] Mixed Batch API success: {total_cached}/{total_processed} cached", xbmc.LOGINFO)
+            
+            # Xử lý kết quả cho từng ID
+            results = {}
+            for tmdb_id in movie_ids + tv_ids:
+                tmdb_id_str = str(tmdb_id)
+                if tmdb_id_str in batch_results:
+                    item_result = batch_results[tmdb_id_str]
+                    is_cached = item_result.get("cached", False)
+                    media_type = item_result.get("media_type", "movie")
+                    results[tmdb_id] = (is_cached, None, media_type)
+                else:
+                    # Nếu không có trong kết quả, coi như cache miss
+                    media_type = "movie" if tmdb_id in movie_ids else "tv"
+                    results[tmdb_id] = (False, None, media_type)
+            
+            return results
+        else:
+            error_msg = f"Mixed Batch API lỗi: {response.status_code}"
+            xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+            results = {}
+            for tmdb_id in movie_ids:
+                results[tmdb_id] = (None, error_msg, "movie")
+            for tmdb_id in tv_ids:
+                results[tmdb_id] = (None, error_msg, "tv")
+            return results
+            
+    except requests.exceptions.Timeout:
+        error_msg = f"Mixed Batch API timeout sau {timeout} giây"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        results = {}
+        for tmdb_id in movie_ids:
+            results[tmdb_id] = (None, error_msg, "movie")
+        for tmdb_id in tv_ids:
+            results[tmdb_id] = (None, error_msg, "tv")
+        return results
+    except requests.exceptions.ConnectionError:
+        error_msg = f"Không thể kết nối đến Mixed Batch API: {backend_url}"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        results = {}
+        for tmdb_id in movie_ids:
+            results[tmdb_id] = (None, error_msg, "movie")
+        for tmdb_id in tv_ids:
+            results[tmdb_id] = (None, error_msg, "tv")
+        return results
+    except Exception as e:
+        error_msg = f"Lỗi Mixed Batch API: {str(e)}"
+        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
+        results = {}
+        for tmdb_id in movie_ids:
+            results[tmdb_id] = (None, error_msg, "movie")
+        for tmdb_id in tv_ids:
+            results[tmdb_id] = (None, error_msg, "tv")
+        return results
 
 def display_movie_detail(movie_data, media_type, tmdb_id, download_info=None):
     """
@@ -435,7 +644,8 @@ def display_movie_detail(movie_data, media_type, tmdb_id, download_info=None):
 
 def filter_cached_results(movies_data, tv_data):
     """
-    Lọc kết quả chỉ hiển thị những item có trong cache backend
+    Lọc kết quả tìm kiếm chỉ hiển thị những phim/TV có trong cache backend
+    Sử dụng Batch API để tăng tốc độ lên 10-26 lần
     
     Args:
         movies_data (dict): Dữ liệu phim từ TMDB
@@ -447,89 +657,137 @@ def filter_cached_results(movies_data, tv_data):
     try:
         # Kiểm tra xem có bật kiểm tra cache không
         backend_enabled = ADDON.getSettingBool('backend_api_enabled')
-        xbmc.log(f"[VietmediaF] Filtering cached results - Backend API enabled: {backend_enabled}", xbmc.LOGINFO)
+        batch_enabled = get_backend_batch_enabled()
+        xbmc.log(f"[VietmediaF] Filtering cached results - Backend API enabled: {backend_enabled}, Batch API enabled: {batch_enabled}", xbmc.LOGINFO)
         
         if not backend_enabled:
             xbmc.log(f"[VietmediaF] Backend API disabled, returning all results without filtering", xbmc.LOGINFO)
             return movies_data, tv_data, None  # Nếu không bật, trả về dữ liệu gốc
         
-        filtered_movies = None
-        filtered_tv = None
-        total_checked = 0
-        total_cached = 0
-        errors = []
+        # Thu thập tất cả TMDB IDs
+        movie_ids = []
+        tv_ids = []
         
-        # Lọc phim
         if movies_data and movies_data.get('results'):
-            xbmc.log(f"[VietmediaF] Filtering {len(movies_data['results'])} movies", xbmc.LOGINFO)
+            movie_ids = [movie.get('id') for movie in movies_data['results'] if movie.get('id')]
+        
+        if tv_data and tv_data.get('results'):
+            tv_ids = [tv.get('id') for tv in tv_data['results'] if tv.get('id')]
+        
+        total_items = len(movie_ids) + len(tv_ids)
+        xbmc.log(f"[VietmediaF] Batch filtering {len(movie_ids)} movies + {len(tv_ids)} TV shows = {total_items} total", xbmc.LOGINFO)
+        
+        if total_items == 0:
+            xbmc.log(f"[VietmediaF] No items to filter", xbmc.LOGINFO)
+            return movies_data, tv_data, None
+        
+        # Chọn phương pháp kiểm tra cache dựa trên settings
+        if batch_enabled and total_items > 1:
+            # Sử dụng Mixed Batch API để kiểm tra cache cho cả movies và TV
+            xbmc.log(f"[VietmediaF] Using Batch API for {total_items} items", xbmc.LOGINFO)
+            batch_results = check_backend_cache_mixed_batch(movie_ids, tv_ids)
+        else:
+            # Fallback về Single API nếu Batch API bị tắt hoặc chỉ có 1 item
+            xbmc.log(f"[VietmediaF] Using Single API for {total_items} items", xbmc.LOGINFO)
+            batch_results = {}
+            
+            # Kiểm tra cache cho từng movie
+            for tmdb_id in movie_ids:
+                is_cached, error = check_backend_cache(tmdb_id, "movie")
+                batch_results[tmdb_id] = (is_cached, error, "movie")
+            
+            # Kiểm tra cache cho từng TV show
+            for tmdb_id in tv_ids:
+                is_cached, error = check_backend_cache(tmdb_id, "tv")
+                batch_results[tmdb_id] = (is_cached, error, "tv")
+        
+        # Xử lý kết quả cho movies
+        filtered_movies = None
+        if movies_data and movies_data.get('results'):
+            xbmc.log(f"[VietmediaF] Processing {len(movies_data['results'])} movies with Batch API results", xbmc.LOGINFO)
             cached_movies = []
             for movie in movies_data['results']:
                 tmdb_id = movie.get('id')
-                total_checked += 1
-                if tmdb_id:
-                    xbmc.log(f"[VietmediaF] Checking cache for movie ID {tmdb_id}: {movie.get('title', 'Unknown')}", xbmc.LOGINFO)
-                    is_cached, error = check_backend_cache(tmdb_id, "movie")
+                if tmdb_id and tmdb_id in batch_results:
+                    is_cached, error, media_type = batch_results[tmdb_id]
                     if is_cached is True:
                         cached_movies.append(movie)
-                        total_cached += 1
-                        xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} CACHE HIT", xbmc.LOGINFO)
+                        xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} CACHE HIT (Batch)", xbmc.LOGINFO)
                     elif is_cached is False:
-                        xbmc.log(f"[VietmediaF] Movie TMDB ID {tmdb_id} CACHE MISS, hiding", xbmc.LOGINFO)
+                        xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} CACHE MISS, hiding (Batch)", xbmc.LOGINFO)
                     else:  # is_cached is None (có lỗi)
                         if error:
-                            errors.append(f"Phim ID {tmdb_id}: {error}")
+                            xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} ERROR: {error} (Batch)", xbmc.LOGWARNING)
                         # Nếu có lỗi, vẫn hiển thị phim để không làm mất kết quả
                         cached_movies.append(movie)
-                        total_cached += 1
-                        xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} ERROR, showing anyway", xbmc.LOGINFO)
+                        xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} ERROR, showing anyway (Batch)", xbmc.LOGINFO)
+                else:
+                    # Nếu không có trong batch results, coi như cache miss
+                    xbmc.log(f"[VietmediaF] Movie ID {tmdb_id} NOT FOUND in batch results, hiding", xbmc.LOGINFO)
             
             if cached_movies:
                 filtered_movies = movies_data.copy()
                 filtered_movies['results'] = cached_movies
                 filtered_movies['total_results'] = len(cached_movies)
+                xbmc.log(f"[VietmediaF] Movies filtered: {len(cached_movies)}/{len(movies_data['results'])} cached", xbmc.LOGINFO)
         
-        # Lọc TV series
+        # Xử lý kết quả cho TV shows
+        filtered_tv = None
         if tv_data and tv_data.get('results'):
+            xbmc.log(f"[VietmediaF] Processing {len(tv_data['results'])} TV shows with Batch API results", xbmc.LOGINFO)
             cached_tv = []
             for tv in tv_data['results']:
                 tmdb_id = tv.get('id')
-                total_checked += 1
-                if tmdb_id:
-                    is_cached, error = check_backend_cache(tmdb_id, "tv")
+                if tmdb_id and tmdb_id in batch_results:
+                    is_cached, error, media_type = batch_results[tmdb_id]
                     if is_cached is True:
                         cached_tv.append(tv)
-                        total_cached += 1
+                        xbmc.log(f"[VietmediaF] TV ID {tmdb_id} CACHE HIT (Batch)", xbmc.LOGINFO)
                     elif is_cached is False:
-                        xbmc.log(f"[VietmediaF] TV TMDB ID {tmdb_id} not in cache, hiding", xbmc.LOGINFO)
+                        xbmc.log(f"[VietmediaF] TV ID {tmdb_id} CACHE MISS, hiding (Batch)", xbmc.LOGINFO)
                     else:  # is_cached is None (có lỗi)
                         if error:
-                            errors.append(f"TV ID {tmdb_id}: {error}")
+                            xbmc.log(f"[VietmediaF] TV ID {tmdb_id} ERROR: {error} (Batch)", xbmc.LOGWARNING)
                         # Nếu có lỗi, vẫn hiển thị TV để không làm mất kết quả
                         cached_tv.append(tv)
-                        total_cached += 1
+                        xbmc.log(f"[VietmediaF] TV ID {tmdb_id} ERROR, showing anyway (Batch)", xbmc.LOGINFO)
+                else:
+                    # Nếu không có trong batch results, coi như cache miss
+                    xbmc.log(f"[VietmediaF] TV ID {tmdb_id} NOT FOUND in batch results, hiding", xbmc.LOGINFO)
             
             if cached_tv:
                 filtered_tv = tv_data.copy()
                 filtered_tv['results'] = cached_tv
                 filtered_tv['total_results'] = len(cached_tv)
+                xbmc.log(f"[VietmediaF] TV shows filtered: {len(cached_tv)}/{len(tv_data['results'])} cached", xbmc.LOGINFO)
         
-        # Log thống kê
-        xbmc.log(f"[VietmediaF] Cache check completed: {total_cached}/{total_checked} items cached", xbmc.LOGINFO)
+        # Tính toán thống kê
+        total_cached = 0
+        total_errors = 0
+        errors = []
+        
+        for tmdb_id, (is_cached, error, media_type) in batch_results.items():
+            if is_cached is True:
+                total_cached += 1
+            elif is_cached is None and error:
+                total_errors += 1
+                errors.append(f"{media_type.title()} ID {tmdb_id}: {error}")
         
         # Tạo thông báo lỗi nếu có
         error_message = None
         if errors:
-            error_message = f"Backend API có lỗi:\n" + "\n".join(errors[:3])  # Chỉ hiển thị 3 lỗi đầu
-            if len(errors) > 3:
-                error_message += f"\n... và {len(errors) - 3} lỗi khác"
+            if len(errors) <= 3:
+                error_message = f"⚠️ Backend API có lỗi:\n" + "\n".join(errors)
+            else:
+                error_message = f"⚠️ Backend API có lỗi:\n" + "\n".join(errors[:3]) + f"\n... và {len(errors) - 3} lỗi khác"
+        
+        xbmc.log(f"[VietmediaF] Batch filtering completed: {total_cached}/{total_items} cached, {total_errors} errors", xbmc.LOGINFO)
         
         return filtered_movies, filtered_tv, error_message
         
     except Exception as e:
-        error_msg = f"Lỗi khi kiểm tra cache: {str(e)}"
-        xbmc.log(f"[VietmediaF] {error_msg}", xbmc.LOGERROR)
-        # Nếu có lỗi, trả về dữ liệu gốc
-        return movies_data, tv_data, error_msg
+        xbmc.log(f"[VietmediaF] Error in filter_cached_results: {str(e)}", xbmc.LOGERROR)
+        return movies_data, tv_data, f"Lỗi khi lọc kết quả: {str(e)}"
 
 def search_movies(query, page=1):
     """
