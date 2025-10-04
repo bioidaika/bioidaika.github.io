@@ -1,0 +1,715 @@
+﻿import sys, re
+import os, time, json, traceback
+import remove_accents
+import xbmcplugin, xbmcaddon, xbmcgui, xbmc, xbmcvfs
+from resources.addon import alert, notify, TextBoxes, ADDON, ADDON_ID, ADDON_PROFILE, LOG, PROFILE
+from config import VIETMEDIA_HOST
+from resources import fshare
+import urllib.parse
+
+ADDON_NAME = ADDON.getAddonInfo("name")
+PROFILE_PATH = xbmcvfs.translatePath(ADDON_PROFILE)
+VIEWXXX = ADDON.getSetting('view_xxx')
+VIEWMODE = ADDON.getSetting('view_mode')
+HANDLE = int(sys.argv[1])
+CACHE_TIMEOUT = 300
+
+def debug(text):
+    """Ghi log debug vÃ o file"""
+    filename = os.path.join(PROFILE_PATH, 'list.dat')
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(str(text))
+    except Exception as e:
+        xbmc.log(f"[VietmediaF] Error writing debug file: {str(e)}", xbmc.LOGERROR)
+
+def check_lock(item_path):
+    """Kiá»ƒm tra xem Ä‘Æ°á»ng dáº«n cÃ³ bá»‹ khÃ³a khÃ´ng"""
+    filename = os.path.join(PROFILE_PATH, 'lock_dir.dat')
+    if not os.path.exists(filename):
+        return False
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        return (item_path + "\n") in lines
+    except Exception as e:
+        xbmc.log(f"[VietmediaF] Error checking lock: {str(e)}", xbmc.LOGERROR)
+        return False
+def list_item_main(data):
+
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+
+    if data is None:
+
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+    if data.get("content_type") and len(data["content_type"]) > 0:
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_GENRE)
+        xbmcplugin.setContent(HANDLE, data["content_type"])
+    listitems = list(range(len(data["items"])))
+
+    for i, item in enumerate(data["items"]):
+        lock_url = item["path"].replace("plugin://%s" % ADDON_ID, VIETMEDIA_HOST)
+        lock_url = re.sub('\?', '/?', lock_url)
+        path = item["path"]
+        label = item["label"]
+        filterStr = ["xxx", "sex", "jav", "cap 3", "18+", "20+"]
+        if check_lock(lock_url):label = "*" + label
+        listItem = xbmcgui.ListItem(label=label, label2=item["label2"])
+        if VIEWXXX == 'false':
+            label_ = label.lower()
+            if '18+' in label_ or 'xxx' in label_ or 'XXX' in label_ or 'cáº¥p 3' in label or 'jav' in label_ or 'JAV' in label_ or '+' in label_ or 'sex' in label_ or 'SEX' in label_ or 'fuck' in label_ or '20+' in label_:
+
+                listItem = xbmcgui.ListItem(label='[I]Ná»™i dung cáº§n thiáº¿t láº­p Ä‘á»ƒ xem[/I]',label2=item["label2"])
+                path = 'plugin://plugin.video.vietmediaF?action=browse&node_id=75'
+
+            else:
+
+                listItem = xbmcgui.ListItem(label=label, label2=item["label2"])
+        if VIEWXXX == 'true':
+            listItem = xbmcgui.ListItem(label=label, label2=item["label2"])
+
+        if item.get("info"):
+            listItem.setInfo("video", item["info"])
+
+        if item.get("art"):
+            listItem.setArt(item["art"])
+
+        listItem.setArt({'thumb': item["thumbnail"], 'icon': item["thumbnail"], 'poster': item["icon"]})
+
+        menu_context = []
+        title = item["label"]
+        title = re.sub('\[.*?]', '', title)
+        title = re.sub('\s', '-', title)
+        title = re.sub('--', '-', title)
+        title = re.sub('--', '-', title)
+        title = re.sub('[\\\\/*?:"<>|]', "", title)
+        title = remove_accents.remove_accents(title)
+        if item.get("context_menu"):
+            listItem.addContextMenuItems(item["context_menu"])
+        elif "_phimle_" in path:
+            command = 'RunPlugin(%s&d=select_source_phimle)' % item["path"]
+            menu_context.append(('Thay Ä‘á»•i nguá»“n phim', command,))
+        elif "_phimbo_" in path:
+            command = 'RunPlugin(%s&d=select_source_phimbo)' % item["path"]
+            menu_context.append(('Thay Ä‘á»•i nguá»“n phim', command,))
+        elif "fshare.vn" in path:
+            command = 'RunPlugin(%s&d=__addtofav__&file_name=%s)' % (item["path"], title)
+            menu_context.append(('[COLOR yellow]ThÃªm vÃ o YÃªu ThÃ­ch Fshare[/COLOR]', command,))
+            command = 'RunPlugin(%s&d=__removeFromfav__&file_name=%s)' % (item["path"], title)
+            menu_context.append(('[COLOR yellow]XoÃ¡ khá»i YÃªu ThÃ­ch Fshare[/COLOR]', command,))
+            command = 'RunPlugin(%s&d=__qrlink__)' % item["path"]
+            menu_context.append(('[COLOR yellow]Play on Mobile[/COLOR]', command,))
+            if "file" in path:
+                command = 'RunPlugin(%s&d=__download__)' % item["path"]
+                menu_context.append(('[COLOR yellow]Download[/COLOR]', command,))
+        command = 'RunPlugin(%s&d=__lock__)' % item["path"]
+        menu_context.append(('KhoÃ¡ má»¥c nÃ y', command,))
+        command = 'RunPlugin(%s&d=__unlock__)' % item["path"]
+        menu_context.append(('Má»Ÿ khoÃ¡ má»¥c nÃ y', command,))
+        command = 'RunPlugin(%s&d=__settings__)' % item["path"]
+        menu_context.append(('[COLOR yellow]Addon Setting[/COLOR]', command,))
+
+        listItem.addContextMenuItems(menu_context)
+        listItem.setProperty("isPlayable", item["is_playable"] and "true" or "false")
+        if item.get("properties"):
+            for k, v in item["properties"].items():
+
+                if v is not None:
+                    listItem.setProperty(k, str(v))
+        listitems[i] = (path, listItem, not item["is_playable"])
+
+
+
+
+
+
+    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+
+    set_view_mode(data.get("content_type", "movies"))
+    xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
+
+def list_item_main_cache(data):
+
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list_item_main_cache in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+
+
+
+    if data is None:
+
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+    items = data["items"]
+    for item in items:
+        list_item = xbmcgui.ListItem(label=item["label"])
+        list_item.setInfo('video', item["info"])
+
+        list_item.setArt({'thumb': item["thumbnail"], 'icon': item["icon"]})
+        list_item.setProperty('IsPlayable', 'true' if item["is_playable"] else 'false')
+        xbmcplugin.addDirectoryItem(handle=HANDLE, url=item["path"], listitem=list_item, isFolder=not item["is_playable"])
+
+
+    xbmcplugin.endOfDirectory(HANDLE)
+
+def list_item(data):
+
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list_item in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+    if data is None:
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+
+    if data.get("content_type"):
+        xbmcplugin.setContent(HANDLE, data["content_type"])
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_GENRE)
+
+    listitems = []
+
+    for item in data["items"]:
+
+        label = item["label"]
+        path = item["path"]
+
+
+        list_item = xbmcgui.ListItem(label=label, label2=item.get("label2", ""))
+
+
+        set_item_info(list_item, item)
+
+
+        menu_context = []
+
+        list_item.addContextMenuItems(menu_context)
+
+        listitems.append((path, list_item, not item["is_playable"]))
+
+    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+
+    xbmcplugin.endOfDirectory(HANDLE, succeeded=True)
+def list_item_watched_history(data):
+
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list_item_watched_history in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+    debug(str(data))
+
+    if data is None:
+
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+    if data.get("content_type") and len(data["content_type"]) > 0:
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_GENRE)
+        xbmcplugin.setContent(HANDLE, data["content_type"])
+
+    listitems = list(range(len(data["items"])))
+
+    for i, item in enumerate(data["items"]):
+        path = item["path"]
+        label = item["label"]
+
+
+        listItem = xbmcgui.ListItem(label=label, label2=item.get("label2", ""))
+
+
+        if item.get("info"):
+            listItem.setInfo("video", item["info"])
+
+
+        listItem.setArt({'thumb': item.get("thumbnail", ""), 'icon': item.get("icon", "")})
+
+
+        menu_context = []
+
+        command = 'RunPlugin(%s&d=__removeAllWatchedHistory__)' % (path)
+        menu_context.append(('[COLOR yellow]XoÃ¡ lá»‹ch sá»­ xem phim[/COLOR]', command,))
+
+        if "fshare" in path:
+            command = 'RunPlugin(%s&d=__qrlink__)' % path
+            menu_context.append(('[COLOR yellow]QR Link[/COLOR]', command,))
+
+        listItem.addContextMenuItems(menu_context)
+
+
+        listItem.setProperty("isPlayable", item["is_playable"] and "true" or "false")
+
+        listitems[i] = (path, listItem, not item["is_playable"])
+
+    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+
+    set_view_mode(data.get("content_type", "movies"))
+    xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
+def list_item_search_history(data):
+
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list_item_search_history in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+
+    if data is None:
+
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+    if data.get("content_type") and len(data["content_type"]) > 0:
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_GENRE)
+        xbmcplugin.setContent(HANDLE, data["content_type"])
+
+    listitems = list(range(len(data["items"])))
+
+    for i, item in enumerate(data["items"]):
+        lock_url = item["path"]
+        lock_url = re.sub('\?', '/?', lock_url)
+        path = item["path"]
+        label = item["label"]
+
+        if "@" in label:label = label.replace("@", "")
+
+        if check_lock(lock_url):
+            label = "*" + label
+
+
+        label2 = item["label2"] if "label2" in item else ""
+        if item.get("info") and "size" in item["info"]:
+
+            size = item["info"]["size"]
+            if isinstance(size, (int, float)):
+                if size > 1073741824:
+                    size_str = "{:.2f} GB".format(size / 1073741824)
+                elif size > 1048576:
+                    size_str = "{:.2f} MB".format(size / 1048576)
+                elif size > 1024:
+                    size_str = "{:.2f} KB".format(size / 1024)
+                else:
+                    size_str = "{} bytes".format(size)
+
+
+                if label2:
+                    label2 = label2 + " - " + size_str
+                else:
+                    label2 = size_str
+
+        listItem = xbmcgui.ListItem(
+
+            label=label, label2=label2)
+        if item.get("info"):
+
+            info_tag = listItem.getVideoInfoTag()
+
+
+            if "plot" in item["info"]:
+                info_tag.setPlot(item["info"]["plot"])
+            if "title" in item["info"]:
+                info_tag.setTitle(item["info"]["title"])
+            if "year" in item["info"]:
+                info_tag.setYear(int(item["info"]["year"]) if str(item["info"]["year"]).isdigit() else 0)
+            if "genre" in item["info"]:
+                info_tag.setGenres([item["info"]["genre"]])
+            if "director" in item["info"]:
+                info_tag.setDirectors([item["info"]["director"]])
+            if "rating" in item["info"]:
+                info_tag.setRating(float(item["info"]["rating"]) if isinstance(item["info"]["rating"], (int, float, str)) else 0.0)
+            if "duration" in item["info"]:
+                info_tag.setDuration(int(item["info"]["duration"]) if str(item["info"]["duration"]).isdigit() else 0)
+            if "mediatype" in item["info"]:
+                info_tag.setMediaType(item["info"]["mediatype"])
+        if item.get("stream_info"):
+            for type_, values in item["stream_info"].items():
+                listItem.addStreamInfo(type_, values)
+        if item.get("art"):
+            listItem.setArt(item["art"])
+
+        listItem.setArt({'thumb': item["thumbnail"], 'icon': item["thumbnail"], 'poster': item["icon"]})
+        listItem.setProperty("isPlayable", item["is_playable"] and "true" or "false")
+        if item.get("properties"):
+            for k, v in item["properties"].items():
+                listItem.setProperty(k, v)
+        listitems[i] = (path, listItem, not item["is_playable"])
+
+    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+
+    set_view_mode(data.get("content_type", "movies"))
+    xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
+
+def set_item_info(list_item, item_data):
+    """
+    HÃ m tá»•ng quÃ¡t Ä‘á»ƒ thiáº¿t láº­p táº¥t cáº£ thÃ´ng tin cho ListItem
+    Args:
+        list_item: xbmcgui.ListItem object
+        item_data: dict chá»©a thÃ´ng tin item
+    """
+    try:
+        # Láº¥y video info tag
+        info_tag = list_item.getVideoInfoTag()
+        info = item_data.get("info", {})
+
+        # Thiáº¿t láº­p cÃ¡c thÃ´ng tin cÆ¡ báº£n
+        if "title" in info:
+            info_tag.setTitle(info["title"])
+        if "plot" in info:
+            info_tag.setPlot(info["plot"])
+        if "mediatype" in info:
+            info_tag.setMediaType(info["mediatype"])
+        else:
+            # Máº·c Ä‘á»‹nh lÃ  movie náº¿u khÃ´ng cÃ³ mediatype
+            info_tag.setMediaType("movie")
+
+        # Thiáº¿t láº­p cÃ¡c thÃ´ng tin sá»‘
+        if "year" in info:
+            try:
+                info_tag.setYear(int(info["year"]))
+            except (ValueError, TypeError):
+                pass
+
+        if "rating" in info:
+            try:
+                info_tag.setRating(float(info["rating"]))
+            except (ValueError, TypeError):
+                pass
+
+        if "duration" in info:
+            try:
+                info_tag.setDuration(int(info["duration"]))
+            except (ValueError, TypeError):
+                pass
+
+        # Thiáº¿t láº­p cÃ¡c thÃ´ng tin danh sÃ¡ch
+        if "genre" in info:
+            genres = info["genre"].split(",") if isinstance(info["genre"], str) else [info["genre"]]
+            info_tag.setGenres(genres)
+
+        if "studio" in info:
+            studios = info["studio"].split(",") if isinstance(info["studio"], str) else [info["studio"]]
+            info_tag.setStudios(studios)
+
+        if "director" in info:
+            directors = info["director"].split(",") if isinstance(info["director"], str) else [info["director"]]
+            info_tag.setDirectors(directors)
+
+        if "cast" in info:
+            cast = []
+            cast_list = info["cast"] if isinstance(info["cast"], list) else [info["cast"]]
+            for actor in cast_list:
+                if isinstance(actor, str):
+                    cast.append(xbmc.Actor(actor, "", 0, ""))
+                elif isinstance(actor, dict):
+                    cast.append(xbmc.Actor(
+                        actor.get("name", ""),
+                        actor.get("role", ""),
+                        actor.get("order", 0),
+                        actor.get("thumbnail", "")
+                    ))
+            info_tag.setCast(cast)
+
+        if "country" in info:
+            countries = info["country"].split(",") if isinstance(info["country"], str) else [info["country"]]
+            info_tag.setCountries(countries)
+
+        if "mpaa" in info:
+            info_tag.setMpaa(info["mpaa"])
+
+        # Thiáº¿t láº­p artwork
+        art = {
+            'thumb': item_data.get("thumbnail", ""),
+            'icon': item_data.get("icon", ""),
+            'poster': item_data.get("art", {}).get("poster", item_data.get("thumbnail", "")),
+            'fanart': item_data.get("art", {}).get("fanart", ""),
+            'clearart': item_data.get("art", {}).get("clearart", ""),
+            'clearlogo': item_data.get("art", {}).get("clearlogo", ""),
+            'landscape': item_data.get("art", {}).get("landscape", ""),
+            'banner': item_data.get("art", {}).get("banner", "")
+        }
+        list_item.setArt(art)
+
+        # Thiáº¿t láº­p stream info
+        if "stream_info" in item_data:
+            for stream_type, values in item_data["stream_info"].items():
+                list_item.addStreamInfo(stream_type, values)
+
+        # Thiáº¿t láº­p cÃ¡c thuá»™c tÃ­nh khÃ¡c
+        if "properties" in item_data:
+            for key, value in item_data["properties"].items():
+                if value is not None:
+                    list_item.setProperty(key, str(value))
+
+        # Thiáº¿t láº­p label2 náº¿u cÃ³
+        if "label2" in item_data and item_data["label2"]:
+            list_item.setLabel2(item_data["label2"])
+
+        # Thiáº¿t láº­p kÃ­ch thÆ°á»›c file náº¿u cÃ³
+        if "size" in info and isinstance(info["size"], (int, float)) and info["size"] > 0:
+            size = info["size"]
+            if size > 1073741824:
+                size_str = "{:.2f} GB".format(size / 1073741824)
+            elif size > 1048576:
+                size_str = "{:.2f} MB".format(size / 1048576)
+            elif size > 1024:
+                size_str = "{:.2f} KB".format(size / 1024)
+            else:
+                size_str = "{} bytes".format(size)
+
+            list_item.setLabel2(size_str)
+
+    except Exception as e:
+        xbmc.log(f"[VietmediaF] Error setting item info: {str(e)}", xbmc.LOGERROR)
+        xbmc.log(traceback.format_exc(), xbmc.LOGERROR)
+
+def create_context_menu(item):
+    """Táº¡o menu ngá»¯ cáº£nh cho item"""
+    menu_context = []
+    path = item.get("path", "")
+    label = item.get("label", "")
+
+    # Xá»­ lÃ½ tiÃªu Ä‘á» cho menu ngá»¯ cáº£nh
+    title = re.sub('\[.*?]', '', label)
+    title = re.sub('\s', '-', title)
+    title = re.sub('--', '-', title)
+    title = re.sub('--', '-', title)
+    title = re.sub('[\\\\/*?:"<>|]', "", title)
+    title = remove_accents.remove_accents(title)
+
+    # Náº¿u item Ä‘Ã£ cÃ³ menu ngá»¯ cáº£nh, sá»­ dá»¥ng nÃ³
+    if item.get("context_menu"):
+        return item["context_menu"]
+
+    # ThÃªm cÃ¡c menu ngá»¯ cáº£nh tÃ¹y theo loáº¡i item
+    if "_phimle_" in path:
+        command = f'RunPlugin({path}&d=select_source_phimle)'
+        menu_context.append(('Thay Ä‘á»•i nguá»“n phim', command))
+    elif "_phimbo_" in path:
+        command = f'RunPlugin({path}&d=select_source_phimbo)'
+        menu_context.append(('Thay Ä‘á»•i nguá»“n phim', command))
+    elif "fshare.vn" in path:
+        command = f'RunPlugin({path}&d=__addtofav__&file_name={title})'
+        menu_context.append(('[COLOR yellow]ThÃªm vÃ o YÃªu ThÃ­ch Fshare[/COLOR]', command))
+        command = f'RunPlugin({path}&d=__removeFromfav__&file_name={title})'
+        menu_context.append(('[COLOR yellow]XoÃ¡ khá»i YÃªu ThÃ­ch Fshare[/COLOR]', command))
+        command = f'RunPlugin({path}&d=__qrlink__)'
+        menu_context.append(('[COLOR yellow]Play on Mobile[/COLOR]', command))
+        if "file" in path:
+            command = f'RunPlugin({path}&d=__download__)'
+            menu_context.append(('[COLOR yellow]Download[/COLOR]', command))
+
+    # ThÃªm cÃ¡c menu ngá»¯ cáº£nh chung
+    command = f'RunPlugin({path}&d=__lock__)'
+    menu_context.append(('KhoÃ¡ má»¥c nÃ y', command))
+    command = f'RunPlugin({path}&d=__unlock__)'
+    menu_context.append(('Má»Ÿ khoÃ¡ má»¥c nÃ y', command))
+    command = f'RunPlugin({path}&d=__settings__)'
+    menu_context.append(('[COLOR yellow]Addon Setting[/COLOR]', command))
+
+    return menu_context
+
+def list_items(data, list_type="default"):
+    """
+    HÃ m chung Ä‘á»ƒ hiá»ƒn thá»‹ danh sÃ¡ch cÃ¡c item
+
+    Args:
+        data: Dictionary chá»©a thÃ´ng tin danh sÃ¡ch
+        list_type: Loáº¡i danh sÃ¡ch (default, search_history, watched_history)
+    """
+    window_id = xbmc.getInfoLabel('System.CurrentWindowId')
+    window_name = xbmc.getInfoLabel('System.CurrentWindow')
+    xbmc.log(f"[VietmediaF] Loading list items ({list_type}) in Window ID: {window_id}, Window Name: {window_name}", xbmc.LOGINFO)
+
+    # Kiá»ƒm tra dá»¯ liá»‡u
+    if data is None:
+        xbmcplugin.endOfDirectory(HANDLE, succeeded=False)
+        return
+
+    # Thiáº¿t láº­p content type vÃ  phÆ°Æ¡ng thá»©c sáº¯p xáº¿p
+    if data.get("content_type"):
+        xbmcplugin.setContent(HANDLE, data["content_type"])
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)
+        xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_GENRE)
+
+    # Danh sÃ¡ch cÃ¡c item Ä‘á»ƒ thÃªm vÃ o directory
+    listitems = []
+
+    # Xá»­ lÃ½ tá»«ng item
+    for item in data.get("items", []):
+        # Láº¥y thÃ´ng tin cÆ¡ báº£n
+        path = item.get("path", "")
+        label = item.get("label", "")
+
+        # Xá»­ lÃ½ URL cho viá»‡c kiá»ƒm tra khÃ³a
+        lock_url = path.replace(f"plugin://{ADDON_ID}", VIETMEDIA_HOST)
+        lock_url = re.sub('\?', '/?', lock_url)
+
+        # Kiá»ƒm tra khÃ³a
+        if check_lock(lock_url):
+            label = "*" + label
+
+        # Xá»­ lÃ½ ná»™i dung ngÆ°á»i lá»›n
+        if VIEWXXX == 'false':
+            label_lower = label.lower()
+            adult_keywords = ['18+', 'xxx', 'cáº¥p 3', 'jav', '+', 'sex', 'fuck', '20+']
+
+            if any(keyword in label_lower for keyword in adult_keywords):
+                list_item = xbmcgui.ListItem(label='[I]Ná»™i dung cáº§n thiáº¿t láº­p Ä‘á»ƒ xem[/I]')
+                path = 'plugin://plugin.video.vietmediaF?action=menu'
+                is_folder = True
+            else:
+                list_item = xbmcgui.ListItem(label=label)
+        else:
+            list_item = xbmcgui.ListItem(label=label)
+
+        # Thiáº¿t láº­p thÃ´ng tin cho item
+        set_item_info(list_item, item)
+
+        # Táº¡o menu ngá»¯ cáº£nh tÃ¹y theo loáº¡i danh sÃ¡ch
+        if list_type == "watched_history":
+            menu_context = []
+            command = f'RunPlugin({path}&d=__removeAllWatchedHistory__)'
+            menu_context.append(('[COLOR yellow]XoÃ¡ lá»‹ch sá»­ xem phim[/COLOR]', command))
+
+            if "fshare" in path:
+                command = f'RunPlugin({path}&d=__qrlink__)'
+                menu_context.append(('[COLOR yellow]QR Link[/COLOR]', command))
+
+            list_item.addContextMenuItems(menu_context)
+        else:
+            # Sá»­ dá»¥ng menu ngá»¯ cáº£nh máº·c Ä‘á»‹nh
+            menu_context = create_context_menu(item)
+            list_item.addContextMenuItems(menu_context)
+
+        # Thiáº¿t láº­p thuá»™c tÃ­nh isPlayable
+        is_playable = item.get("is_playable", False)
+        list_item.setProperty("IsPlayable", "true" if is_playable else "false")
+
+        # ThÃªm vÃ o danh sÃ¡ch
+        listitems.append((path, list_item, not is_playable))
+
+    # ThÃªm táº¥t cáº£ cÃ¡c item vÃ o directory
+    xbmcplugin.addDirectoryItems(HANDLE, listitems, totalItems=len(listitems))
+
+    # Thiáº¿t láº­p cháº¿ Ä‘á»™ xem
+    set_view_mode(data.get("content_type", "movies"))
+
+    # Káº¿t thÃºc directory
+    xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=False, cacheToDisc=True)
+
+def list_item_main(data):
+    """Hiá»ƒn thá»‹ danh sÃ¡ch chÃ­nh"""
+    list_items(data, "default")
+
+def list_item_main_cache(data):
+    """Hiá»ƒn thá»‹ danh sÃ¡ch tá»« cache"""
+    list_items(data, "default")
+
+def list_item(data):
+    """Hiá»ƒn thá»‹ danh sÃ¡ch Ä‘Æ¡n giáº£n"""
+    list_items(data, "default")
+
+def list_item_watched_history(data):
+    """Hiá»ƒn thá»‹ danh sÃ¡ch lá»‹ch sá»­ xem"""
+    list_items(data, "watched_history")
+
+def list_item_search_history(data):
+    """Hiá»ƒn thá»‹ danh sÃ¡ch lá»‹ch sá»­ tÃ¬m kiáº¿m"""
+    list_items(data, "search_history")
+
+def get_skin_view_modes():
+    """Láº¥y cháº¿ Ä‘á»™ xem dá»±a trÃªn skin hiá»‡n táº¡i"""
+    current_skin = xbmc.getSkinDir()
+    xbmc.log(f"[VietmediaF] Current skin: {current_skin}", xbmc.LOGINFO)
+
+    # Äá»‹nh nghÄ©a cÃ¡c cháº¿ Ä‘á»™ xem cho cÃ¡c skin phá»• biáº¿n
+    view_modes = {
+        "skin.arctic.zephyr.2.resurrection.mod": {
+            "list": 50,
+            "poster": 51,
+            "shift": 53,
+            "info": 54,
+            "wide": 55,
+            "wall": 500,
+            "banner": 501,
+            "fanart": 502,
+            "netflix": 521,
+            "biglist": 52,
+            "bigposter": 53,
+            "posterwall": 55,
+            "mediainfo": 56,
+            "extrainfo": 57,
+            "cards": 58,
+            "bannerwall": 59
+        },
+        "skin.confluence": {
+            "list": 50,
+            "poster": 500,
+            "fanart": 504,
+            "media": 501,
+            "wide": 505
+        },
+        "skin.estuary": {
+            "poster": 50,
+            "list": 51,
+            "shift": 53,
+            "wide": 54,
+            "wall": 55,
+            "infoWall": 53,
+            "posterwall": 55,
+            "mediainfo": 53,
+            "widelist": 56
+        },
+        "skin.aeon.nox.silvo": {
+            "list": 50,
+            "poster": 51,
+            "landscape": 52,
+            "fanart": 53,
+            "media": 54,
+            "banner": 55,
+            "panel": 56
+        },
+        "skin.arctic.horizon": {
+            "list": 50,
+            "poster": 51,
+            "landscape": 52,
+            "fanart": 53,
+            "media": 54,
+            "banner": 55,
+            "wall": 56
+        }
+    }
+
+    # Máº·c Ä‘á»‹nh sá»­ dá»¥ng cháº¿ Ä‘á»™ xem cá»§a skin hiá»‡n táº¡i hoáº·c Arctic Zephyr náº¿u khÃ´ng tÃ¬m tháº¥y
+    skin_modes = view_modes.get(current_skin, {
+        "list": 50,
+        "poster": 51,
+        "wide": 55
+    })
+
+    xbmc.log(f"[VietmediaF] View modes for skin: {skin_modes}", xbmc.LOGINFO)
+    return skin_modes
+
+def set_view_mode(content_type="movies"):
+    """KhÃ´ng thiáº¿t láº­p cháº¿ Ä‘á»™ xem, sá»­ dá»¥ng máº·c Ä‘á»‹nh cá»§a Kodi"""
+    # HÃ m nÃ y khÃ´ng lÃ m gÃ¬ cáº£, Ä‘á»ƒ sá»­ dá»¥ng cháº¿ Ä‘á»™ hiá»ƒn thá»‹ máº·c Ä‘á»‹nh cá»§a Kodi
+    xbmc.log("[VietmediaF] Using Kodi default view mode instead of custom view mode", xbmc.LOGINFO)
+    return

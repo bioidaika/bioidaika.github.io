@@ -1428,8 +1428,8 @@ def install_repo(url):
 
 def select_source(setting_key):
     sources = {
-        'phimle_url': ('https://docs.google.com/spreadsheets/d/1OQkv_XDA4xdI16pedQuWDuEfnHYKgJf_nsi92y3UWLs/gviz/tq?gid=0&headers=1', 'Chọn một nguồn phim lẻ'),
-        'phimbo_url': ('https://docs.google.com/spreadsheets/d/1OQkv_XDA4xdI16pedQuWDuEfnHYKgJf_nsi92y3UWLs/gviz/tq?gid=1057024371&headers=1', 'Chọn một nguồn phim bộ')
+        'phimle_url': ('https://docs.google.com/spreadsheets/d/1pYAX4I02kFcR6e5drwsDntB4F_N1jqu91-Z_omOu3NA/gviz/tq?gid=0&headers=1', 'Chọn một nguồn phim lẻ'),
+        'phimbo_url': ('https://docs.google.com/spreadsheets/d/1pYAX4I02kFcR6e5drwsDntB4F_N1jqu91-Z_omOu3NA/gviz/tq?gid=1057024371&headers=1', 'Chọn một nguồn phim bộ')
     }
 
     if setting_key not in sources:
@@ -1958,7 +1958,12 @@ def go():
         timkiemMenu()
         exit()
     if "tmdbsearch" in url:
-        tmdb_search.show_search_form()
+        xbmc.log(f"[VietmediaF] Calling tmdb_search.show_search_form()", xbmc.LOGINFO)
+        try:
+            tmdb_search.show_search_form()
+        except Exception as e:
+            xbmc.log(f"[VietmediaF] Error calling show_search_form: {str(e)}", xbmc.LOGERROR)
+            alert(f"Lỗi gọi show_search_form: {str(e)}")
         exit()
     if "tmdb_movie_detail" in url:
         # Lấy tham số từ URL
@@ -2138,6 +2143,11 @@ def go():
         exit()
     if "__removeAllSearchHistory4share__" in url:
         delete_fshare_history()
+        xbmc.executebuiltin("Container.Refresh")
+        exit()
+    if "__removeAllSearchHistoryTMDB__" in url:
+        from .resources.tmdb_search import delete_tmdb_search_history
+        delete_tmdb_search_history()
         xbmc.executebuiltin("Container.Refresh")
         exit()
     if 'getfolderfiles' in url:
@@ -2532,7 +2542,7 @@ def go():
 
         phim_setting = ADDON.getSetting('phimle_url')
         if not phim_setting:
-            data = phim_list("https://docs.google.com/spreadsheets/d/1OQkv_XDA4xdI16pedQuWDuEfnHYKgJf_nsi92y3UWLs/gviz/tq?gid=0&headers=1")
+            data = phim_list("https://docs.google.com/spreadsheets/d/1pYAX4I02kFcR6e5drwsDntB4F_N1jqu91-Z_omOu3NA/gviz/tq?gid=0&headers=1")
             choices = [item[0] for item in data]
             selected = xbmcgui.Dialog().select('Chọn một nguồn phim', choices)
             if selected != -1:
@@ -2552,7 +2562,7 @@ def go():
 
         phim_setting = ADDON.getSetting('phimbo_url')
         if not phim_setting:
-            data = phim_list("https://docs.google.com/spreadsheets/d/1OQkv_XDA4xdI16pedQuWDuEfnHYKgJf_nsi92y3UWLs/gviz/tq?gid=1057024371&headers=1")
+            data = phim_list("https://docs.google.com/spreadsheets/d/1pYAX4I02kFcR6e5drwsDntB4F_N1jqu91-Z_omOu3NA/gviz/tq?gid=1057024371&headers=1")
             choices = [item[0] for item in data]
             selected = xbmcgui.Dialog().select('Chọn một nguồn phim', choices)
             if selected != -1:

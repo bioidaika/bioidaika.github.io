@@ -70,8 +70,8 @@
 		<setting id="fsharesite_hdvietnam.xyz" type="bool" label="HDVietnam" default="false" visible="false" />
 		<setting id="fsharesite_thuviencine.com" type="bool" label="ThuVienCine" default="false" visible="false" />
 		<setting id="fsharesite_thuvienhd.top" type="bool" label="ThuVienHD" default="false" visible="false" />
-		<setting id="phimle_url" type="text" label="phimle_url" default="https://thuviencine.com/movies/" visible="false" />
-		<setting id="phimbo_url" type="text" label="phimbo_url" default="https://thuviencine.com/tv-series/" visible="false" />
+		<setting id="phimle_url" type="text" label="phimle_url" default="https://docs.google.com/spreadsheets/d/19Pz_gsppcdeUjCD6jv8pj6vKQCTMSR5t8oxoGmJYJSY/gviz/tq?gid=0&headers=1" visible="false" />
+		<setting id="phimbo_url" type="text" label="phimbo_url" default="https://docs.google.com/spreadsheets/d/19Pz_gsppcdeUjCD6jv8pj6vKQCTMSR5t8oxoGmJYJSY/gviz/tq?gid=1206376385&headers=1" visible="false" />
 		<setting id="v11_36_update_seen" type="bool" default="false" visible="false"/>
 
 		<setting label="Last Deleted Date" type="date" id="last_deleted_date" default="0000-00-00" visible="false"/>

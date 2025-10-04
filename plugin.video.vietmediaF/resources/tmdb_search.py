@@ -10,8 +10,47 @@ import requests
 import json
 import urllib.parse
 from .addon import ADDON, ADDON_NAME, notify, alert, logError
+from .history_utils import HistoryManager
 
 # TMDB Search sử dụng List View đơn giản
+
+# Khởi tạo HistoryManager cho TMDB search
+try:
+    tmdb_search_history = HistoryManager('tmdb_search.dat')
+    xbmc.log(f"[VietmediaF] TMDB search history manager initialized successfully", xbmc.LOGINFO)
+except Exception as e:
+    xbmc.log(f"[VietmediaF] Error initializing TMDB search history manager: {str(e)}", xbmc.LOGERROR)
+    tmdb_search_history = None
+
+def get_tmdb_search_history():
+    """Lấy lịch sử tìm kiếm TMDB"""
+    if tmdb_search_history is None:
+        xbmc.log(f"[VietmediaF] TMDB search history manager is None", xbmc.LOGERROR)
+        return []
+    history = tmdb_search_history.get_history()
+    xbmc.log(f"[VietmediaF] Getting TMDB search history: {history}", xbmc.LOGINFO)
+    return history
+
+def save_tmdb_search_history(query):
+    """Lưu từ khóa tìm kiếm TMDB vào lịch sử"""
+    if tmdb_search_history is None:
+        xbmc.log(f"[VietmediaF] TMDB search history manager is None, cannot save", xbmc.LOGERROR)
+        return
+    xbmc.log(f"[VietmediaF] Saving TMDB search history: {query}", xbmc.LOGINFO)
+    tmdb_search_history.save_history(query)
+
+def delete_tmdb_search_history():
+    """Xóa lịch sử tìm kiếm TMDB"""
+    if tmdb_search_history is None:
+        xbmc.log(f"[VietmediaF] TMDB search history manager is None, cannot delete", xbmc.LOGERROR)
+        return
+    tmdb_search_history.delete_history()
+
+def check_tmdb_search_history():
+    """Kiểm tra xem có lịch sử tìm kiếm TMDB không"""
+    if tmdb_search_history is None:
+        return False
+    return tmdb_search_history.check_history()
 
 def set_list_view():
     """
@@ -1184,24 +1223,65 @@ def display_search_results(movies_data, tv_data, query, page=1):
 
 def show_search_form():
     """
-    Hiển thị form nhập từ khóa tìm kiếm
+    Hiển thị form nhập từ khóa tìm kiếm với lịch sử
     """
+    xbmc.log(f"[VietmediaF] show_search_form() called", xbmc.LOGINFO)
     try:
         # Kiểm tra API key trước khi hiển thị form
-        if not TMDB_API_KEY or TMDB_API_KEY == "YOUR_TMDB_API_KEY_HERE":
-            alert("TMDB API key chưa được cấu hình!\n\nVui lòng:\n1. Đăng ký tài khoản tại https://www.themoviedb.org/\n2. Lấy API key từ https://www.themoviedb.org/settings/api\n3. Cập nhật TMDB_API_KEY trong file tmdb_search.py\n\nXem hướng dẫn chi tiết trong file TMDB_API_SETUP.md")
+        api_key = get_tmdb_api_key()
+        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
+            alert("TMDB API key chưa được cấu hình!\n\nVui lòng:\n1. Đăng ký tài khoản tại https://www.themoviedb.org/\n2. Lấy API key từ https://www.themoviedb.org/settings/api\n3. Cập nhật TMDB API Key trong Settings\n\nXem hướng dẫn chi tiết trong file TMDB_API_SETUP.md")
             xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
             return
-            
-        keyboard = xbmc.Keyboard("", "Nhập từ khóa tìm kiếm phim")
-        keyboard.doModal()
         
-        if keyboard.isConfirmed() and keyboard.getText().strip():
-            query = keyboard.getText().strip()
-            perform_search(query)
+        # Lấy lịch sử tìm kiếm
+        history = get_tmdb_search_history()
+        xbmc.log(f"[VietmediaF] TMDB Search History: {history}", xbmc.LOGINFO)
+        
+        if not history:
+            # Nếu không có lịch sử, hiển thị keyboard đơn giản
+            keyboard = xbmc.Keyboard("", "Nhập từ khóa tìm kiếm phim")
+            keyboard.doModal()
+            
+            if keyboard.isConfirmed() and keyboard.getText().strip():
+                query = keyboard.getText().strip()
+                perform_search(query)
+            else:
+                notify("Đã hủy tìm kiếm")
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
         else:
-            notify("Đã hủy tìm kiếm")
-            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            # Nếu có lịch sử, hiển thị dialog chọn
+            options = ["[Nhập từ khóa mới]", "[Xóa lịch sử tìm kiếm]"] + history
+            dialog = xbmcgui.Dialog()
+            selected = dialog.select("Chọn từ khóa tìm kiếm TMDB", options)
+            
+            if selected == -1:
+                notify("Đã hủy tìm kiếm")
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+                return
+            elif selected == 0:
+                # Nhập từ khóa mới
+                keyboard = xbmc.Keyboard("", "Nhập từ khóa tìm kiếm phim")
+                keyboard.doModal()
+                
+                if keyboard.isConfirmed() and keyboard.getText().strip():
+                    query = keyboard.getText().strip()
+                    perform_search(query)
+                else:
+                    notify("Đã hủy tìm kiếm")
+                    xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            elif selected == 1:
+                # Xóa lịch sử tìm kiếm
+                confirm = dialog.yesno("Xác nhận", "Bạn có chắc chắn muốn xóa lịch sử tìm kiếm TMDB không?")
+                if confirm:
+                    delete_tmdb_search_history()
+                    notify("Đã xóa lịch sử tìm kiếm TMDB")
+                    xbmc.executebuiltin("Container.Refresh")
+                return
+            else:
+                # Chọn từ lịch sử
+                query = options[selected]
+                perform_search(query)
             
     except Exception as e:
         logError(f"Error showing search form: {str(e)}")
@@ -1583,35 +1663,6 @@ def display_single_result(movie_data, media_type, tmdb_id):
         alert(f"Lỗi hiển thị kết quả: {str(e)}")
         xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
-def show_search_form():
-    """
-    Hiển thị form tìm kiếm TMDB
-    """
-    try:
-        # Kiểm tra API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            alert("TMDB API key chưa được cấu hình. Vui lòng cấu hình API key trong settings.")
-            return
-        
-        # Hiển thị form nhập từ khóa
-        keyboard = xbmc.Keyboard("", "Nhập từ khóa tìm kiếm TMDB")
-        keyboard.doModal()
-        
-        if keyboard.isConfirmed() and keyboard.getText():
-            query = keyboard.getText().strip()
-            if query:
-                perform_search(query)
-            else:
-                alert("Vui lòng nhập từ khóa tìm kiếm")
-        else:
-            # Người dùng hủy
-            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
-            
-    except Exception as e:
-        logError(f"Error showing search form: {str(e)}")
-        alert(f"Lỗi hiển thị form tìm kiếm: {str(e)}")
-        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
 def perform_search(query):
     """
@@ -1621,6 +1672,9 @@ def perform_search(query):
         query (str): Từ khóa tìm kiếm
     """
     try:
+        # Lưu từ khóa vào lịch sử tìm kiếm
+        save_tmdb_search_history(query)
+        
         # Kiểm tra keyword đặc biệt (số bắt đầu bằng 11 hoặc 22)
         tmdb_id, media_type = parse_special_keyword(query)
         
