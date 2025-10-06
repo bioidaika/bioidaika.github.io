@@ -141,7 +141,7 @@
 	<!-- Bioidaika -->
 	<category label="[COLOR yellow]Bioidaika[/COLOR]">
 		<setting label="[COLOR yellow]TMDB API Configuration[/COLOR]" type="lsep"/>
-		<setting id="tmdb_api_key" type="text" label="TMDB API Key" default="91ffa0b976634f68d550969e0209de76"/>
+		<setting id="tmdb_api_key" type="text" label="TMDB API Key" default="ecb8cf86332887dcabc4269cbac53f42"/>
 		<setting id="tmdb_language" type="select" label="Ngôn ngữ TMDB" values="vi-VN|en-US" default="vi-VN"/>
 		<setting id="tmdb_timeout" type="number" label="Timeout TMDB (giây)" default="10"/>
 		<setting id="tmdb_trending_count" type="select" label="Số lượng phim trending" values="20|40|60|80|100" default="40"/>
