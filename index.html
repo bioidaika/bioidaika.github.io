@@ -1,17 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 
 <head>
-    <title>BioiDaika Repository</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioiDaika Kodi Repository</title>
+    <meta name="description"
+        content="BioiDaika Kodi Repository - VietMediaF Fork. Hướng dẫn cài đặt addon VietMediaF trên Kodi.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .warning {
+            background: #3d1f1f;
+            border-left: 4px solid #ff4444;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9em;
+        }
+
+        .warning strong {
+            color: #ff6b6b;
+        }
+
+        .tip {
+            background: #1f3d2a;
+            border-left: 4px solid #44ff88;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9em;
+        }
+
+        .tip strong {
+            color: #6bffaa;
+        }
+
+        .video-section {
+            margin-bottom: 25px;
+        }
+
+        .video-section h2 {
+            color: #00d4ff;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+            margin-bottom: 15px;
+        }
+
+        .video-wrapper iframe,
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .steps {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .steps h2 {
+            color: #00d4ff;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .steps ol {
+            padding-left: 20px;
+        }
+
+        .steps ol li {
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+
+        .steps code {
+            background: #0f3460;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #00d4ff;
+            font-size: 0.95em;
+        }
+
+        .downloads {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .downloads h2 {
+            color: #00d4ff;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .downloads ul {
+            list-style: none;
+        }
+
+        .downloads li {
+            margin-bottom: 8px;
+        }
+
+        .downloads a {
+            color: #4fc3f7;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+
+        .downloads a:hover {
+            color: #00d4ff;
+            text-decoration: underline;
+        }
+
+        .downloads .desc {
+            color: #888;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #555;
+            font-size: 0.8em;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>BioiDaika Repository</h1>
-    <ul>
-        <li><a href="repo_vietmediaf_fork-0.0.2.zip">repo_vietmediaf_fork-0.0.2.zip</a> - VietMediaF Fork Repository
-        </li>
-        <li><a href="repository.jellyfin.kodi.zip">repository.jellyfin.kodi.zip</a> - Jellyfin Repository</li>
-    </ul>
+    <div class="container">
+        <h1>🎬 BioiDaika Kodi Repository</h1>
+        <p class="subtitle">VietMediaF Fork — Addon tổng hợp link Fshare trên Kodi</p>
+
+        <div class="warning">
+            <strong>⚠️ Lưu ý:</strong> Hãy cẩn thận với các nguồn repo trên Internet, chúng có thể bị gắn mã độc nhằm
+            chiếm đoạt tài khoản hoặc khiến thiết bị của bạn nhiễm virus!
+        </div>
+
+        <div class="tip">
+            <strong>💡 Mẹo:</strong> Bạn nên tải file zip xuống bộ nhớ trong, quá trình cài đặt sẽ nhanh hơn việc thêm
+            nguồn trực tiếp trên Kodi.
+        </div>
+
+        <div class="video-section">
+            <h2>📺 Video hướng dẫn cài đặt</h2>
+            <div class="video-wrapper">
+                <video controls preload="metadata">
+                    <source src="https://kodi.ddns.vn/1.%20VIETMEDIAF/huongdan-vmf.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ video.
+                </video>
+            </div>
+        </div>
+
+        <div class="steps">
+            <h2>📋 Hướng dẫn cài đặt</h2>
+            <ol>
+                <li>Tải file <code>repo_vietmediaf_fork-0.0.2.zip</code> về thiết bị</li>
+                <li>Mở <strong>Kodi</strong> → <strong>Add-ons</strong> → <strong>Install from zip file</strong></li>
+                <li>Chọn file zip vừa tải → Chờ thông báo cài đặt thành công</li>
+                <li>Vào <strong>Install from repository</strong> → <strong>VIETMEDIAF_FORK</strong></li>
+                <li>Chọn <strong>Video add-ons</strong> → <strong>VietmediaF</strong> → <strong>Install</strong></li>
+                <li>Addon sẽ tự động cập nhật khi có phiên bản mới 🎉</li>
+            </ol>
+        </div>
+
+        <div class="downloads">
+            <h2>📥 Tải về</h2>
+            <ul>
+                <li>
+                    📦 <a href="repo_vietmediaf_fork-0.0.2.zip">repo_vietmediaf_fork-0.0.2.zip</a>
+                    <span class="desc">— Repository (cài đặt bước 1)</span>
+                </li>
+                <li>
+                    📦 <a href="repository.jellyfin.kodi.zip">repository.jellyfin.kodi.zip</a>
+                    <span class="desc">— Jellyfin Repository</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            Nội dung được thu thập từ Internet. BioiDaika không chịu trách nhiệm về nội dung hiển thị bên trong addon.
+        </div>
+    </div>
 </body>
 
 </html>
