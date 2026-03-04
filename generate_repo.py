@@ -172,9 +172,11 @@ def main():
     for addon_dir, (addon_id, version, _) in addon_infos:
         create_addon_zip(addon_dir, addon_id, version)
 
-    # Also copy zips to root for manual download
+    # Copy repo zip to root for manual Kodi install
     print()
     for addon_dir, (addon_id, version, _) in addon_infos:
+        if not addon_id.startswith("repo_"):
+            continue
         zip_filename = f"{addon_id}-{version}.zip"
         src = os.path.join(REPO_DIR, addon_id, zip_filename)
         dst = os.path.join(REPO_DIR, zip_filename)
