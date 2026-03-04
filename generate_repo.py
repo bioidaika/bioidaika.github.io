@@ -168,8 +168,19 @@ def main():
 
     # Create zip files
     print()
+    zip_files = []
     for addon_dir, (addon_id, version, _) in addon_infos:
         create_addon_zip(addon_dir, addon_id, version)
+        zip_files.append((addon_id, version))
+
+    # Copy zips to root for Kodi file manager visibility
+    print()
+    for addon_id, version in zip_files:
+        zip_filename = f"{addon_id}-{version}.zip"
+        src = os.path.join(ZIPS_DIR, addon_id, zip_filename)
+        dst = os.path.join(REPO_DIR, zip_filename)
+        shutil.copy2(src, dst)
+        print(f"[COPIED] {zip_filename} -> root/")
 
     print(f"\n{'=' * 60}")
     print("Done! Remember to commit and push to update the repository.")
