@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addons>
+<addon id="plugin.video.vietmediaF" name="VietmediaF" version="11.37.4.1" provider-name="xxVNxx">
+    <requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+    <import addon="script.module.six"/>
+    <import addon="script.module.requests"/>
+	<import addon="script.module.beautifulsoup4"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+    </extension>
+	<extension point="xbmc.service" library="autorun.py"/>
+	<extension point="xbmc.addon.metadata">
+        <reuselanguageinvoker>true</reuselanguageinvoker>
+        <summary lang="en">VietmediaF for Kodi 21</summary>
+        <description lang="en">Vietmediaf is an addon that aggregates Fshare links shared on the Internet.</description>
+        <description lang="vi">VietmediaF - Addon tổng hợp link fshare được chia sẻ trên Internet.</description>
+        <disclaimer lang="en">
+            Content is retrieved from the Internet and uploaded by users. VietmediaF is not responsible for the content displayed within the addon.
+        </disclaimer>
+        <disclaimer lang="vi">Nội dung lấy trên mạng và do người dùng tự upload lên. VietmediaF không chịu trách nhiệm về nội dung hiển thị bên trong addon.
+        </disclaimer>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
+    </extension>
+</addon>
+<addon id="repo_vietmediaf_fork" name="VIETMEDIAF_FORK" version="0.0.2" provider-name="bioidaika">
+	<extension point="xbmc.addon.repository" name="repo_vietmediaf_fork">
+		<dir>
+			<info compressed="false">https://bioidaika.github.io/addons.xml</info>
+			<checksum>https://bioidaika.github.io/addons.xml.md5</checksum>
+			<datadir zip="true">https://bioidaika.github.io/zips/</datadir>
+		</dir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary>VietmediaF Fork Repository</summary>
+		<description>Repository cho VietmediaF Fork by bioidaika</description>
+		<disclaimer>repo_vietmediaf_fork</disclaimer>
+		<platform>all</platform>
+		<assets>
+			<icon>icon.png</icon>
+			<fanart>icon.jpg</fanart>
+		</assets> 
+	</extension>
+</addon>
+</addons>

@@ -5,7 +5,6 @@ __pycache__/
 
 # KODI add-on source directories
 plugin.video.hdvn/
-repo_vietmediaf_offical/
 
 # IDE
 .vscode/
