@@ -5,9 +5,7 @@ Generate Kodi repository files: addons.xml, addons.xml.md5, and addon zip files.
 Usage:
     python generate_repo.py
 
-This script scans for addon directories containing addon.xml,
-generates the combined addons.xml, its MD5 checksum, and creates
-properly-named zip files in a separate 'zips/' directory.
+Source code lives in src/, zip output goes to {addon_id}/ at root.
 """
 
 import hashlib
@@ -19,9 +17,9 @@ from xml.etree import ElementTree as ET
 
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
-ZIPS_DIR = os.path.join(REPO_DIR, "zips")
+SRC_DIR = os.path.join(REPO_DIR, "src")
 
-# Addon directories to include in the repository
+# Addon directories (inside src/)
 ADDON_DIRS = [
     "plugin.video.vietmediaF",
     "repo_vietmediaf_fork",
@@ -29,11 +27,11 @@ ADDON_DIRS = [
 
 # Files/directories to exclude from zip
 ZIP_EXCLUDE_DIRS = {
-    "__pycache__", ".git", ".vscode", ".idea",
+    ".git", ".vscode", ".idea",
 }
 
 ZIP_EXCLUDE_EXTENSIONS = {
-    ".pyc", ".pyo", ".pyd", ".zip",
+    ".zip",
 }
 
 ZIP_EXCLUDE_FILES = {
@@ -52,8 +50,8 @@ def should_exclude(name, is_dir=False):
 
 
 def get_addon_info(addon_dir):
-    """Read addon.xml and return (addon_id, version, xml_content)."""
-    addon_xml_path = os.path.join(REPO_DIR, addon_dir, "addon.xml")
+    """Read addon.xml from src/ and return (addon_id, version, xml_content)."""
+    addon_xml_path = os.path.join(SRC_DIR, addon_dir, "addon.xml")
     if not os.path.exists(addon_xml_path):
         print(f"  [SKIP] {addon_dir}: addon.xml not found")
         return None
@@ -103,23 +101,26 @@ def generate_addons_xml_md5(addons_xml_content):
 
 
 def create_addon_zip(addon_dir, addon_id, version):
-    """Create a Kodi-compatible zip file in the zips/ directory.
+    """Create a Kodi-compatible zip file.
 
-    Output: zips/{addon_id}/{addon_id}-{version}.zip
-    Completely separate from the source addon directory.
+    Source: src/{addon_dir}/
+    Output: {addon_id}/{addon_id}-{version}.zip  (at repo root)
+
+    Kodi expects: {datadir}/{addon_id}/{addon_id}-{version}.zip
     """
-    source_dir = os.path.join(REPO_DIR, addon_dir)
+    source_dir = os.path.join(SRC_DIR, addon_dir)
 
-    # Output to zips/{addon_id}/
-    zip_out_dir = os.path.join(ZIPS_DIR, addon_id)
+    # Output to {addon_id}/ at repo root
+    zip_out_dir = os.path.join(REPO_DIR, addon_id)
     os.makedirs(zip_out_dir, exist_ok=True)
 
     zip_filename = f"{addon_id}-{version}.zip"
     zip_path = os.path.join(zip_out_dir, zip_filename)
 
-    # Remove old zip if exists
-    if os.path.exists(zip_path):
-        os.remove(zip_path)
+    # Remove old zips in this directory
+    for f in os.listdir(zip_out_dir):
+        if f.endswith(".zip"):
+            os.remove(os.path.join(zip_out_dir, f))
 
     file_count = 0
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -139,7 +140,7 @@ def create_addon_zip(addon_dir, addon_id, version):
                 file_count += 1
 
     zip_size_kb = os.path.getsize(zip_path) / 1024
-    print(f"[CREATED] zips/{addon_id}/{zip_filename} ({zip_size_kb:.1f} KB, {file_count} files)")
+    print(f"[CREATED] {addon_id}/{zip_filename} ({zip_size_kb:.1f} KB, {file_count} files)")
 
 
 def main():
@@ -147,8 +148,8 @@ def main():
     print("Kodi Repository Generator")
     print("=" * 60)
     print(f"\nRepo directory: {REPO_DIR}")
-    print(f"Zips directory: {ZIPS_DIR}")
-    print(f"\nScanning addon directories...")
+    print(f"Source directory: {SRC_DIR}")
+    print(f"\nScanning addon directories in src/...")
 
     addon_infos = []
     for addon_dir in ADDON_DIRS:
@@ -168,16 +169,14 @@ def main():
 
     # Create zip files
     print()
-    zip_files = []
     for addon_dir, (addon_id, version, _) in addon_infos:
         create_addon_zip(addon_dir, addon_id, version)
-        zip_files.append((addon_id, version))
 
-    # Copy zips to root for Kodi file manager visibility
+    # Also copy zips to root for manual download
     print()
-    for addon_id, version in zip_files:
+    for addon_dir, (addon_id, version, _) in addon_infos:
         zip_filename = f"{addon_id}-{version}.zip"
-        src = os.path.join(ZIPS_DIR, addon_id, zip_filename)
+        src = os.path.join(REPO_DIR, addon_id, zip_filename)
         dst = os.path.join(REPO_DIR, zip_filename)
         shutil.copy2(src, dst)
         print(f"[COPIED] {zip_filename} -> root/")

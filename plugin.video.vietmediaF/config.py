@@ -1,2 +1,0 @@
-#VIETMEDIA_HOST = "http://54.151.148.202/kodi3.php"
-VIETMEDIA_HOST = ""

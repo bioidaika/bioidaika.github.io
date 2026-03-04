@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # KODI add-on source directories
+src/
 plugin.video.hdvn/
 
 # IDE
@@ -12,4 +13,4 @@ plugin.video.hdvn/
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
