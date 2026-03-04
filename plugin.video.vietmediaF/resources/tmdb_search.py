@@ -97,7 +97,40 @@ def get_backend_batch_size():
     return 50
 
 
-# Backend API Configuration - sẽ được lấy từ settings
+def call_backend_tmdb(endpoint):
+    """
+    Gọi backend TMDB proxy API.
+    
+    Args:
+        endpoint (str): Endpoint bắt đầu bằng /api/tmdb/...
+    
+    Returns:
+        dict: Response JSON hoặc None nếu lỗi
+    """
+    try:
+        backend_url = get_backend_url()
+        timeout = get_backend_timeout()
+        url = f"{backend_url}{endpoint}"
+        
+        xbmc.log(f"[VietmediaF] Calling Backend TMDB: {url}", xbmc.LOGINFO)
+        response = requests.get(url, headers=BACKEND_HEADERS, timeout=timeout)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            xbmc.log(f"[VietmediaF] Backend TMDB error: {response.status_code}", xbmc.LOGERROR)
+            return None
+    except requests.exceptions.Timeout:
+        xbmc.log(f"[VietmediaF] Backend TMDB timeout for {endpoint}", xbmc.LOGERROR)
+        return None
+    except requests.exceptions.ConnectionError:
+        xbmc.log(f"[VietmediaF] Cannot connect to Backend TMDB: {get_backend_url()}", xbmc.LOGERROR)
+        return None
+    except Exception as e:
+        xbmc.log(f"[VietmediaF] Backend TMDB error: {str(e)}", xbmc.LOGERROR)
+        return None
+
+# Backend API Configuration
 
 def check_backend_cache(tmdb_id, media_type):
     """
@@ -2007,7 +2040,7 @@ def get_trending_movies_multiple_pages(time_window="day"):
     """
     try:
         # Lấy số lượng phim muốn lấy từ settings
-        target_count = get_tmdb_trending_count()
+        target_count = 20
         xbmc.log(f"[VietmediaF] Target trending count: {target_count}", xbmc.LOGINFO)
         
         # Tính số trang cần gọi (mỗi trang 20 phim)
@@ -2077,7 +2110,7 @@ def get_trending_tv_multiple_pages(time_window="day"):
     """
     try:
         # Lấy số lượng TV muốn lấy từ settings
-        target_count = get_tmdb_trending_count()
+        target_count = 20
         xbmc.log(f"[VietmediaF] Target trending TV count: {target_count}", xbmc.LOGINFO)
         
         # Tính số trang cần gọi (mỗi trang 20 TV)
@@ -2146,7 +2179,7 @@ def show_trending_movies(time_window="day", page=1):
     try:
         # Debug: Kiểm tra settings
         language = get_tmdb_language()
-        target_count = get_tmdb_trending_count()
+        target_count = 20
         
         xbmc.log(f"[VietmediaF] TMDB Settings Debug:", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Backend URL: {get_backend_url()}", xbmc.LOGINFO)
@@ -2194,7 +2227,7 @@ def show_trending_tv(time_window="day", page=1):
     try:
         # Debug: Kiểm tra settings
         language = get_tmdb_language()
-        target_count = get_tmdb_trending_count()
+        target_count = 20
         
         xbmc.log(f"[VietmediaF] TMDB TV Settings Debug:", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Backend URL: {get_backend_url()}", xbmc.LOGINFO)
