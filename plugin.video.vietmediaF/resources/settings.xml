@@ -132,25 +132,14 @@
 		<setting id="external_player_path" type="text" label="Đường dẫn trình phát video ngoài" default="" visible="false" />
 	</category>
 
-	<!-- Giao diện -->
-	<category label="[COLOR yellow]Giao diện[/COLOR]">
+	<!-- TMDB -->
+	<category label="[COLOR yellow]TMDB[/COLOR]">
 		<setting label="[COLOR yellow]TMDB Search sử dụng List View[/COLOR]" type="lsep"/>
 		<setting id="tmdb_list_view" type="bool" label="Sử dụng List View cho TMDB Search" default="true"/>
-	</category>
-	
-	<!-- Bioidaika -->
-	<category label="[COLOR yellow]Bioidaika[/COLOR]">
-		<setting label="[COLOR yellow]TMDB API Configuration[/COLOR]" type="lsep"/>
-		<setting id="tmdb_api_key" type="text" label="TMDB API Key" default="ecb8cf86332887dcabc4269cbac53f42"/>
-		<setting id="tmdb_language" type="select" label="Ngôn ngữ TMDB" values="vi-VN|en-US" default="vi-VN"/>
-		<setting id="tmdb_timeout" type="number" label="Timeout TMDB (giây)" default="10"/>
-		<setting id="tmdb_trending_count" type="select" label="Số lượng phim trending" values="20|40|60|80|100" default="40"/>
 		
-		<setting label="[COLOR yellow]Backend API Configuration[/COLOR]" type="lsep"/>
-		<setting id="backend_api_enabled" type="bool" label="Kích hoạt kiểm tra cache backend" default="true"/>
-		<setting id="backend_api_url" type="text" label="URL Backend API" default="https://bioidaika.click" visible="eq(-1,true)"/>
-		<setting id="backend_api_timeout" type="number" label="Timeout Backend (giây)" default="22" visible="eq(-2,true)"/>
-		<setting id="backend_batch_enabled" type="bool" label="Sử dụng Batch API (nhanh hơn 10-26x)" default="true" visible="eq(-3,true)"/>
-		<setting id="backend_batch_size" type="number" label="Kích thước batch tối đa" default="50" visible="eq(-4,true)"/>
+		<setting label="[COLOR yellow]TMDB[/COLOR]" type="lsep"/>
+		<setting id="tmdb_language" type="select" label="Ngôn ngữ TMDB" values="vi-VN|en-US" default="vi-VN"/>
+		<setting id="backend_api_url" type="text" label="URL Backend API" default="https://vietmediaf.store"/>
 	</category>
 </settings>
+

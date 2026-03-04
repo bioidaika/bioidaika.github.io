@@ -26,7 +26,7 @@ def sppedfs():
     token = ADDON.getSetting('tokenfshare')
 
     folder_url = base64.b64decode(
-        'aHR0cHM6Ly93d3cuZnNoYXJlLnZuL2ZvbGRlci8yOVZDVFZMMjdLWFQ=').decode('utf-8')
+        'aHR0cHM6Ly93d3cuZnNoYXJlLnZuL2ZvbGRlci9GUThNNlFWWVU0Ujc=').decode('utf-8')
     headers['Cookie'] = f'session_id={session_id}'
 
     payload = {

@@ -67,47 +67,34 @@ def set_list_view():
     except Exception as e:
         xbmc.log(f"[VietmediaF] Error setting list view: {str(e)}", xbmc.LOGERROR)
 
-# TMDB API Configuration - sẽ được lấy từ settings
-TMDB_BASE_URL = "https://api.themoviedb.org/3"
+# TMDB Image Base URL (vẫn cần để tạo URL poster/backdrop)
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
-def get_tmdb_api_key():
-    """Lấy TMDB API key từ settings"""
-    return ADDON.getSetting('tmdb_api_key') or "YOUR_TMDB_API_KEY_HERE"
+# Backend API Headers
+BACKEND_HEADERS = {
+    'User-Agent': 'VietMediaF/1.0',
+    'Accept': 'application/json'
+}
+
+def get_backend_url():
+    """URL backend API từ settings"""
+    return ADDON.getSetting('backend_api_url') or "https://vietmediaf.store"
+
+def get_backend_timeout():
+    """Timeout backend API (hardcoded)"""
+    return 22
 
 def get_tmdb_language():
     """Lấy ngôn ngữ TMDB từ settings"""
     return ADDON.getSetting('tmdb_language') or "vi-VN"
 
-def get_tmdb_timeout():
-    """Lấy timeout TMDB từ settings"""
-    return int(ADDON.getSetting('tmdb_timeout') or "10")
-
-def get_tmdb_trending_count():
-    """Lấy số lượng phim trending từ settings"""
-    try:
-        setting_value = ADDON.getSetting('tmdb_trending_count')
-        count = int(setting_value or "20")
-        xbmc.log(f"[VietmediaF] TMDB trending count setting: '{setting_value}' -> {count}", xbmc.LOGINFO)
-        return count
-    except (ValueError, TypeError) as e:
-        xbmc.log(f"[VietmediaF] Error parsing trending count setting: {e}, using default 20", xbmc.LOGERROR)
-        return 20
-
 def get_backend_batch_enabled():
-    """Lấy setting Batch API enabled"""
-    return ADDON.getSettingBool('backend_batch_enabled')
+    """Batch API luôn bật"""
+    return True
 
 def get_backend_batch_size():
-    """Lấy kích thước batch tối đa từ settings"""
-    try:
-        setting_value = ADDON.getSetting('backend_batch_size')
-        size = int(setting_value or "50")
-        xbmc.log(f"[VietmediaF] Backend batch size setting: '{setting_value}' -> {size}", xbmc.LOGINFO)
-        return size
-    except (ValueError, TypeError) as e:
-        xbmc.log(f"[VietmediaF] Error parsing batch size setting: {e}, using default 50", xbmc.LOGERROR)
-        return 50
+    """Kích thước batch tối đa (hardcoded)"""
+    return 50
 
 
 # Backend API Configuration - sẽ được lấy từ settings
@@ -125,7 +112,7 @@ def check_backend_cache(tmdb_id, media_type):
     """
     try:
         # Kiểm tra xem có bật kiểm tra cache không
-        backend_enabled = ADDON.getSettingBool('backend_api_enabled')
+        backend_enabled = True
         xbmc.log(f"[VietmediaF] Backend API enabled: {backend_enabled}", xbmc.LOGINFO)
         
         if not backend_enabled:
@@ -133,11 +120,11 @@ def check_backend_cache(tmdb_id, media_type):
             return True, None  # Nếu không bật, mặc định hiển thị tất cả
         
         # Lấy cấu hình từ settings
-        backend_url = ADDON.getSetting('backend_api_url')
+        backend_url = get_backend_url()
         if not backend_url:
-            backend_url = "https://bioidaika.click"
+            backend_url = "https://vietmediaf.store"
         
-        timeout = int(ADDON.getSetting('backend_api_timeout') or "3")
+        timeout = get_backend_timeout()
         
         # Tạo URL endpoint cho backend API theo cấu trúc thực tế
         endpoint = f"{backend_url}/api/{media_type}/{tmdb_id}"
@@ -207,15 +194,15 @@ def get_backend_download_info(tmdb_id, media_type):
     """
     try:
         # Kiểm tra xem có bật kiểm tra cache không
-        if not ADDON.getSettingBool('backend_api_enabled'):
+        if not True:
             return None
         
         # Lấy cấu hình từ settings
-        backend_url = ADDON.getSetting('backend_api_url')
+        backend_url = get_backend_url()
         if not backend_url:
-            backend_url = "https://bioidaika.click"
+            backend_url = "https://vietmediaf.store"
         
-        timeout = int(ADDON.getSetting('backend_api_timeout') or "3")
+        timeout = get_backend_timeout()
         
         # Tạo URL endpoint cho backend API
         endpoint = f"{backend_url}/api/{media_type}/{tmdb_id}"
@@ -264,15 +251,15 @@ def check_backend_cache_batch(tmdb_ids, media_type):
     """
     try:
         # Kiểm tra xem có bật kiểm tra cache không
-        if not ADDON.getSettingBool('backend_api_enabled'):
+        if not True:
             return {tmdb_id: (True, None) for tmdb_id in tmdb_ids}
         
         # Lấy cấu hình từ settings
-        backend_url = ADDON.getSetting('backend_api_url')
+        backend_url = get_backend_url()
         if not backend_url:
-            backend_url = "https://bioidaika.click"
+            backend_url = "https://vietmediaf.store"
         
-        timeout = int(ADDON.getSetting('backend_api_timeout') or "22")
+        timeout = get_backend_timeout()
         
         # Tạo URL endpoint cho Batch API
         endpoint = f"{backend_url}/api/batch/{media_type}"
@@ -346,7 +333,7 @@ def check_backend_cache_mixed_batch(movie_ids, tv_ids):
     """
     try:
         # Kiểm tra xem có bật kiểm tra cache không
-        if not ADDON.getSettingBool('backend_api_enabled'):
+        if not True:
             results = {}
             for tmdb_id in movie_ids:
                 results[tmdb_id] = (True, None, "movie")
@@ -355,11 +342,11 @@ def check_backend_cache_mixed_batch(movie_ids, tv_ids):
             return results
         
         # Lấy cấu hình từ settings
-        backend_url = ADDON.getSetting('backend_api_url')
+        backend_url = get_backend_url()
         if not backend_url:
-            backend_url = "https://bioidaika.click"
+            backend_url = "https://vietmediaf.store"
         
-        timeout = int(ADDON.getSetting('backend_api_timeout') or "22")
+        timeout = get_backend_timeout()
         
         # Tạo URL endpoint cho Mixed Batch API
         endpoint = f"{backend_url}/api/batch/mixed"
@@ -642,6 +629,29 @@ def display_movie_detail(movie_data, media_type, tmdb_id, download_info=None):
         alert(f"Lỗi hiển thị chi tiết: {str(e)}")
         xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
+def add_paging_nav(page, total_pages, next_url_template):
+    """
+    Thêm nút phân trang và nút về trang chính
+    
+    Args:
+        page (int): Trang hiện tại
+        total_pages (int): Tổng số trang
+        next_url_template (str): URL trang tiếp (đã format sẵn page+1)
+    """
+    # Nút trang tiếp
+    if page < total_pages:
+        next_item = xbmcgui.ListItem(f"[COLOR yellow]Trang Tiếp ({page + 1}) →[/COLOR]")
+        next_item.setProperty('IsPlayable', 'false')
+        xbmcplugin.addDirectoryItem(int(sys.argv[1]), next_url_template, next_item, isFolder=True)
+    
+    # Nút về trang chính
+    home_url = "plugin://plugin.video.vietmediaF?action=menu"
+    home_item = xbmcgui.ListItem("[COLOR lime][HOME] Về trang chính[/COLOR]")
+    home_item.setProperty('IsPlayable', 'false')
+    xbmcplugin.addDirectoryItem(int(sys.argv[1]), home_url, home_item, isFolder=True)
+    
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=True)
+
 def filter_cached_results(movies_data, tv_data):
     """
     Lọc kết quả tìm kiếm chỉ hiển thị những phim/TV có trong cache backend
@@ -656,7 +666,7 @@ def filter_cached_results(movies_data, tv_data):
     """
     try:
         # Kiểm tra xem có bật kiểm tra cache không
-        backend_enabled = ADDON.getSettingBool('backend_api_enabled')
+        backend_enabled = True
         batch_enabled = get_backend_batch_enabled()
         xbmc.log(f"[VietmediaF] Filtering cached results - Backend API enabled: {backend_enabled}, Batch API enabled: {batch_enabled}", xbmc.LOGINFO)
         
@@ -789,96 +799,66 @@ def filter_cached_results(movies_data, tv_data):
         xbmc.log(f"[VietmediaF] Error in filter_cached_results: {str(e)}", xbmc.LOGERROR)
         return movies_data, tv_data, f"Lỗi khi lọc kết quả: {str(e)}"
 
+def parse_year_from_query(query):
+    """
+    Parse năm từ query tìm kiếm.
+    Hỗ trợ: 'avatar 2009', 'avatar (2009)'
+    
+    Returns:
+        tuple: (clean_query, year) - query đã bỏ năm và năm (int hoặc None)
+    """
+    import re
+    year_match = re.search(r'\s\(?(19\d{2}|20\d{2})\)?$', query)
+    if year_match:
+        year = int(year_match.group(1))
+        clean_query = query[:year_match.start()].strip()
+        return clean_query, year
+    return query, None
+
 def search_movies(query, page=1):
     """
-    Tìm kiếm phim trên TMDB API
+    Tìm kiếm phim trên TMDB qua Backend API
+    Hỗ trợ tìm theo năm: 'avatar 2009' hoặc 'avatar (2009)'
     
     Args:
-        query (str): Từ khóa tìm kiếm
+        query (str): Từ khóa tìm kiếm (có thể kèm năm)
         page (int): Trang kết quả
     
     Returns:
         dict: Dữ liệu phim từ TMDB API
     """
     try:
-        # Lấy API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            logError("TMDB API key chưa được cấu hình đúng")
-            return None
-            
-        url = f"{TMDB_BASE_URL}/search/movie"
-        params = {
-            'api_key': api_key,
-            'query': query,
-            'page': page,
-            'language': get_tmdb_language(),
-            'include_adult': 'false'
-        }
-        
-        headers = {
-            'User-Agent': 'VietMediaF/1.0',
-            'Accept': 'application/json'
-        }
-        
-        response = requests.get(url, params=params, headers=headers, timeout=get_tmdb_timeout())
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            logError("TMDB API key không hợp lệ. Vui lòng cấu hình API key thực tế.")
-            return None
-        else:
-            logError(f"TMDB API error: {response.status_code} - {response.text}")
-            return None
-            
+        lang = get_tmdb_language()
+        clean_query, year = parse_year_from_query(query)
+        endpoint = f"/api/tmdb/search/movie?q={requests.utils.quote(clean_query)}&page={page}&lang={lang}"
+        if year:
+            endpoint += f"&year={year}"
+            xbmc.log(f"[VietmediaF] Search movies: '{clean_query}' year={year}", xbmc.LOGINFO)
+        return call_backend_tmdb(endpoint)
     except Exception as e:
         logError(f"Error searching movies: {str(e)}")
         return None
 
 def search_tv_shows(query, page=1):
     """
-    Tìm kiếm TV series trên TMDB API
+    Tìm kiếm TV series trên TMDB qua Backend API
+    Hỗ trợ tìm theo năm: 'breaking bad 2008' hoặc 'breaking bad (2008)'
     
     Args:
-        query (str): Từ khóa tìm kiếm
+        query (str): Từ khóa tìm kiếm (có thể kèm năm)
         page (int): Trang kết quả
     
     Returns:
         dict: Dữ liệu TV series từ TMDB API
     """
     try:
-        # Lấy API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            logError("TMDB API key chưa được cấu hình đúng")
-            return None
-            
-        url = f"{TMDB_BASE_URL}/search/tv"
-        params = {
-            'api_key': api_key,
-            'query': query,
-            'page': page,
-            'language': get_tmdb_language(),
-            'include_adult': 'false'
-        }
-        
-        headers = {
-            'User-Agent': 'VietMediaF/1.0',
-            'Accept': 'application/json'
-        }
-        
-        response = requests.get(url, params=params, headers=headers, timeout=get_tmdb_timeout())
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            logError("TMDB API key không hợp lệ. Vui lòng cấu hình API key thực tế.")
-            return None
-        else:
-            logError(f"TMDB API error: {response.status_code} - {response.text}")
-            return None
-            
+        lang = get_tmdb_language()
+        clean_query, year = parse_year_from_query(query)
+        endpoint = f"/api/tmdb/search/tv?q={requests.utils.quote(clean_query)}&page={page}&lang={lang}"
+        if year:
+            endpoint += f"&year={year}"
+            xbmc.log(f"[VietmediaF] Search TV: '{clean_query}' year={year}", xbmc.LOGINFO)
+        return call_backend_tmdb(endpoint)
     except Exception as e:
         logError(f"Error searching TV shows: {str(e)}")
         return None
@@ -957,6 +937,7 @@ def get_country_from_language(lang_code):
 def get_genre_names(genre_ids):
     """
     Chuyển đổi genre IDs thành tên thể loại
+    Sử dụng backend API để lấy danh sách genres, fallback về hardcoded map
     
     Args:
         genre_ids (list): Danh sách genre IDs
@@ -964,26 +945,19 @@ def get_genre_names(genre_ids):
     Returns:
         str: Tên thể loại phân cách bằng dấu phẩy
     """
+    # Fallback genre map (Việt hóa)
     genre_map = {
-        28: 'Hành động',
-        12: 'Phiêu lưu',
-        16: 'Hoạt hình',
-        35: 'Hài',
-        80: 'Tội phạm',
-        99: 'Tài liệu',
-        18: 'Drama',
-        10751: 'Gia đình',
-        14: 'Fantasy',
-        36: 'Lịch sử',
-        27: 'Kinh dị',
-        10402: 'Âm nhạc',
-        9648: 'Bí ẩn',
-        10749: 'Lãng mạn',
-        878: 'Khoa học viễn tưởng',
-        10770: 'TV Movie',
-        53: 'Thriller',
-        10752: 'Chiến tranh',
-        37: 'Miền Tây'
+        28: 'Hành động', 12: 'Phiêu lưu', 16: 'Hoạt hình',
+        35: 'Hài', 80: 'Tội phạm', 99: 'Tài liệu',
+        18: 'Drama', 10751: 'Gia đình', 14: 'Fantasy',
+        36: 'Lịch sử', 27: 'Kinh dị', 10402: 'Âm nhạc',
+        9648: 'Bí ẩn', 10749: 'Lãng mạn', 878: 'Khoa học viễn tưởng',
+        10770: 'TV Movie', 53: 'Thriller', 10752: 'Chiến tranh',
+        37: 'Miền Tây',
+        # TV genres
+        10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News',
+        10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap',
+        10767: 'Talk', 10768: 'War & Politics'
     }
     
     genres = []
@@ -1198,7 +1172,7 @@ def create_movie_item(movie, media_type="movie"):
         logError(f"Error creating movie item: {str(e)}")
         return None
 
-def display_search_results(movies_data, tv_data, query, page=1):
+def display_search_results(movies_data, tv_data, query, page=1, close_directory=True):
     """
     Hiển thị kết quả tìm kiếm trên Kodi
     
@@ -1499,7 +1473,8 @@ def display_search_results(movies_data, tv_data, query, page=1):
             
             # Thiết lập list view cho kết quả tìm kiếm
             set_list_view()
-            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=True)
+            if close_directory:
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=True)
         else:
             notify("Không tìm thấy kết quả nào")
             xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
@@ -1515,13 +1490,6 @@ def show_search_form():
     """
     xbmc.log(f"[VietmediaF] show_search_form() called", xbmc.LOGINFO)
     try:
-        # Kiểm tra API key trước khi hiển thị form
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            alert("TMDB API key chưa được cấu hình!\n\nVui lòng:\n1. Đăng ký tài khoản tại https://www.themoviedb.org/\n2. Lấy API key từ https://www.themoviedb.org/settings/api\n3. Cập nhật TMDB API Key trong Settings\n\nXem hướng dẫn chi tiết trong file TMDB_API_SETUP.md")
-            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
-            return
-        
         # Lấy lịch sử tìm kiếm
         history = get_tmdb_search_history()
         xbmc.log(f"[VietmediaF] TMDB Search History: {history}", xbmc.LOGINFO)
@@ -1608,7 +1576,7 @@ def parse_special_keyword(query):
 
 def get_movie_details(tmdb_id, media_type):
     """
-    Lấy thông tin chi tiết phim/TV từ TMDB API
+    Lấy thông tin chi tiết phim/TV từ TMDB qua Backend API
     
     Args:
         tmdb_id (int): ID của phim/TV trên TMDB
@@ -1618,42 +1586,9 @@ def get_movie_details(tmdb_id, media_type):
         dict: Thông tin chi tiết phim/TV
     """
     try:
-        # Lấy API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            logError("TMDB API key chưa được cấu hình đúng")
-            return None
-            
-        # Xác định endpoint dựa trên media_type
-        if media_type == "movie":
-            url = f"{TMDB_BASE_URL}/movie/{tmdb_id}"
-        else:
-            url = f"{TMDB_BASE_URL}/tv/{tmdb_id}"
-            
-        params = {
-            'api_key': api_key,
-            'language': get_tmdb_language()
-        }
-        
-        headers = {
-            'User-Agent': 'VietMediaF/1.0',
-            'Accept': 'application/json'
-        }
-        
-        response = requests.get(url, params=params, headers=headers, timeout=get_tmdb_timeout())
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            logError("TMDB API key không hợp lệ. Vui lòng cấu hình API key thực tế.")
-            return None
-        elif response.status_code == 404:
-            logError(f"Không tìm thấy {media_type} với ID: {tmdb_id}")
-            return None
-        else:
-            logError(f"TMDB API error: {response.status_code} - {response.text}")
-            return None
-            
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/{media_type}/{tmdb_id}?lang={lang}"
+        return call_backend_tmdb(endpoint)
     except Exception as e:
         logError(f"Error getting movie details: {str(e)}")
         return None
@@ -2024,106 +1959,38 @@ def perform_search(query):
 
 def get_trending_movies(time_window="day", page=1):
     """
-    Lấy danh sách phim trending từ TMDB API (1 trang)
+    Lấy danh sách phim trending từ TMDB qua Backend API (1 trang)
     
     Args:
         time_window (str): Khoảng thời gian (day hoặc week)
         page (int): Trang kết quả
     
     Returns:
-        dict: Dữ liệu phim trending từ TMDB API
+        dict: Dữ liệu phim trending
     """
     try:
-        # Lấy API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            logError("TMDB API key chưa được cấu hình đúng")
-            return None
-            
-        # Validate time_window parameter
-        if time_window not in ['day', 'week']:
-            time_window = 'day'
-            
-        url = f"{TMDB_BASE_URL}/trending/movie/{time_window}"
-        params = {
-            'api_key': api_key,
-            'page': page
-        }
-        
-        # Chỉ thêm language nếu không phải default
-        language = get_tmdb_language()
-        if language and language != 'en-US':
-            params['language'] = language
-        
-        headers = {
-            'User-Agent': 'VietMediaF/1.0',
-            'Accept': 'application/json'
-        }
-        
-        response = requests.get(url, params=params, headers=headers, timeout=get_tmdb_timeout())
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            logError("TMDB API key không hợp lệ. Vui lòng cấu hình API key thực tế.")
-            return None
-        else:
-            logError(f"TMDB API error: {response.status_code} - {response.text}")
-            return None
-            
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/trending/movie?page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
     except Exception as e:
         logError(f"Error getting trending movies: {str(e)}")
         return None
 
 def get_trending_tv(time_window="day", page=1):
     """
-    Lấy danh sách TV trending từ TMDB API (1 trang)
+    Lấy danh sách TV trending từ TMDB qua Backend API (1 trang)
     
     Args:
         time_window (str): Khoảng thời gian (day hoặc week)
         page (int): Trang kết quả
     
     Returns:
-        dict: Dữ liệu TV trending từ TMDB API
+        dict: Dữ liệu TV trending
     """
     try:
-        # Lấy API key từ settings
-        api_key = get_tmdb_api_key()
-        if not api_key or api_key == "YOUR_TMDB_API_KEY_HERE":
-            logError("TMDB API key chưa được cấu hình đúng")
-            return None
-            
-        # Validate time_window parameter
-        if time_window not in ['day', 'week']:
-            time_window = 'day'
-            
-        url = f"{TMDB_BASE_URL}/trending/tv/{time_window}"
-        params = {
-            'api_key': api_key,
-            'page': page
-        }
-        
-        # Chỉ thêm language nếu không phải default
-        language = get_tmdb_language()
-        if language and language != 'en-US':
-            params['language'] = language
-        
-        headers = {
-            'User-Agent': 'VietMediaF/1.0',
-            'Accept': 'application/json'
-        }
-        
-        response = requests.get(url, params=params, headers=headers, timeout=get_tmdb_timeout())
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            logError("TMDB API key không hợp lệ. Vui lòng cấu hình API key thực tế.")
-            return None
-        else:
-            logError(f"TMDB API error: {response.status_code} - {response.text}")
-            return None
-            
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/trending/tv?page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
     except Exception as e:
         logError(f"Error getting trending TV: {str(e)}")
         return None
@@ -2277,16 +2144,13 @@ def show_trending_movies(time_window="day", page=1):
         page (int): Trang hiện tại (không sử dụng, chỉ để tương thích)
     """
     try:
-        # Debug: Kiểm tra tất cả settings TMDB
-        api_key = get_tmdb_api_key()
+        # Debug: Kiểm tra settings
         language = get_tmdb_language()
-        timeout = get_tmdb_timeout()
         target_count = get_tmdb_trending_count()
         
         xbmc.log(f"[VietmediaF] TMDB Settings Debug:", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - API Key: {api_key[:10]}..." if api_key else "None", xbmc.LOGINFO)
+        xbmc.log(f"[VietmediaF] - Backend URL: {get_backend_url()}", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Language: {language}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Timeout: {timeout}", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Trending Count: {target_count}", xbmc.LOGINFO)
         
         # Lấy số lượng phim từ setting
@@ -2328,16 +2192,13 @@ def show_trending_tv(time_window="day", page=1):
         page (int): Trang hiện tại (không sử dụng, chỉ để tương thích)
     """
     try:
-        # Debug: Kiểm tra tất cả settings TMDB
-        api_key = get_tmdb_api_key()
+        # Debug: Kiểm tra settings
         language = get_tmdb_language()
-        timeout = get_tmdb_timeout()
         target_count = get_tmdb_trending_count()
         
         xbmc.log(f"[VietmediaF] TMDB TV Settings Debug:", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - API Key: {api_key[:10]}..." if api_key else "None", xbmc.LOGINFO)
+        xbmc.log(f"[VietmediaF] - Backend URL: {get_backend_url()}", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Language: {language}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Timeout: {timeout}", xbmc.LOGINFO)
         xbmc.log(f"[VietmediaF] - Trending Count: {target_count}", xbmc.LOGINFO)
         
         # Lấy số lượng TV từ setting
@@ -2422,39 +2283,23 @@ def display_trending_tv_results_simple(tv_data, time_window):
 
 def show_trending_unified(media_type="movies", page=1):
     """
-    Hiển thị danh sách trending thống nhất (Movies hoặc TV)
+    Hiển thị danh sách trending với paging (1 trang mỗi lần, 20 items/trang)
     
     Args:
         media_type (str): Loại media ("movies" hoặc "tv")
-        page (int): Trang hiện tại (không sử dụng, chỉ để tương thích)
+        page (int): Trang hiện tại
     """
     try:
-        # Hardcode time_window = "day"
-        time_window = "day"
-        
-        # Debug: Kiểm tra tất cả settings TMDB
-        api_key = get_tmdb_api_key()
-        language = get_tmdb_language()
-        timeout = get_tmdb_timeout()
-        target_count = get_tmdb_trending_count()
-        
-        xbmc.log(f"[VietmediaF] TMDB Unified Trending Settings Debug:", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Media Type: {media_type}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Time Window: {time_window}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - API Key: {api_key[:10]}..." if api_key else "None", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Language: {language}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Timeout: {timeout}", xbmc.LOGINFO)
-        xbmc.log(f"[VietmediaF] - Trending Count: {target_count}", xbmc.LOGINFO)
-        
-        # Lấy số lượng từ setting
         media_label = "phim" if media_type == "movies" else "TV series"
-        notify(f"Đang tải {target_count} {media_label} trending ({time_window})...")
+        notify(f"Đang tải {media_label} trending (trang {page})...")
         
-        # Lấy dữ liệu trending (nhiều trang)
+        xbmc.log(f"[VietmediaF] Trending: media_type={media_type}, page={page}, backend={get_backend_url()}", xbmc.LOGINFO)
+        
+        # Gọi API 1 trang
         if media_type == "movies":
-            data = get_trending_movies_multiple_pages(time_window)
+            data = get_trending_movies("day", page)
         else:
-            data = get_trending_tv_multiple_pages(time_window)
+            data = get_trending_tv("day", page)
         
         if data and data.get('results'):
             # Lọc kết quả theo cache backend
@@ -2464,18 +2309,28 @@ def show_trending_unified(media_type="movies", page=1):
             else:
                 _, filtered_data, error_message = filter_cached_results(None, data)
             
-            # Hiển thị thông báo lỗi nếu có
             if error_message:
-                alert(f"⚠️ {error_message}\n\nKết quả vẫn được hiển thị nhưng có thể không chính xác.")
+                alert(f"⚠️ {error_message}")
             
             if filtered_data and filtered_data.get('results'):
-                # Hiển thị kết quả trending (không phân trang)
-                display_trending_unified_results(filtered_data, media_type, time_window)
+                total_pages = data.get('total_pages', 1)
+                total_results = data.get('total_results', 0)
+                count_info = f"({len(filtered_data['results'])}/{total_results})"
+                
+                # Hiển thị kết quả
+                if media_type == "movies":
+                    display_search_results(filtered_data, None, f"Trending Movies - Trang {page} {count_info}", close_directory=False)
+                else:
+                    display_search_results(None, filtered_data, f"Trending TV - Trang {page} {count_info}", close_directory=False)
+                
+                # Thêm nút phân trang và nút về trang chính
+                next_url = f"plugin://plugin.video.vietmediaF?action=tmdb_trending&type={media_type}&page={page + 1}"
+                add_paging_nav(page, total_pages, next_url)
             else:
-                alert(f"Không tìm thấy {media_label} trending nào trong cache. Vui lòng thử lại sau.")
+                alert(f"Không tìm thấy {media_label} trending nào trong cache.")
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
         else:
-            alert(f"Không tìm thấy {media_label} trending nào. Vui lòng thử lại sau.")
+            alert(f"Không tìm thấy {media_label} trending.")
             xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
             
     except Exception as e:
@@ -2591,3 +2446,316 @@ def add_pagination_items(time_window, current_page, total_pages):
         
     except Exception as e:
         logError(f"Error adding pagination items: {str(e)}")
+
+# ════════════════════════════════════════════════════════════════════
+# NEW FEATURES: Discover, Now Playing, Upcoming, Top Rated
+# ════════════════════════════════════════════════════════════════════
+
+def get_discover(media_type, genre_id, page=1):
+    """
+    Lấy danh sách phim/TV theo thể loại từ Backend API
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+        genre_id (int): ID thể loại
+        page (int): Trang kết quả
+    
+    Returns:
+        dict: Dữ liệu phim/TV theo thể loại
+    """
+    try:
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/discover/{media_type}?genre={genre_id}&page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
+    except Exception as e:
+        logError(f"Error getting discover: {str(e)}")
+        return None
+
+def get_now_playing(page=1):
+    """
+    Lấy danh sách phim đang chiếu từ Backend API
+    
+    Args:
+        page (int): Trang kết quả
+    
+    Returns:
+        dict: Dữ liệu phim đang chiếu
+    """
+    try:
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/now-playing?page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
+    except Exception as e:
+        logError(f"Error getting now playing: {str(e)}")
+        return None
+
+def get_upcoming(page=1):
+    """
+    Lấy danh sách phim sắp chiếu từ Backend API
+    
+    Args:
+        page (int): Trang kết quả
+    
+    Returns:
+        dict: Dữ liệu phim sắp chiếu
+    """
+    try:
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/upcoming?page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
+    except Exception as e:
+        logError(f"Error getting upcoming: {str(e)}")
+        return None
+
+def get_top_rated(media_type, page=1):
+    """
+    Lấy danh sách phim/TV đánh giá cao nhất từ Backend API
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+        page (int): Trang kết quả
+    
+    Returns:
+        dict: Dữ liệu phim/TV đánh giá cao
+    """
+    try:
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/top-rated/{media_type}?page={page}&lang={lang}"
+        return call_backend_tmdb(endpoint)
+    except Exception as e:
+        logError(f"Error getting top rated: {str(e)}")
+        return None
+
+def get_genres_list(media_type):
+    """
+    Lấy danh sách thể loại từ Backend API
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+    
+    Returns:
+        list: Danh sách thể loại [{id, name}, ...]
+    """
+    try:
+        lang = get_tmdb_language()
+        endpoint = f"/api/tmdb/genres/{media_type}?lang={lang}"
+        data = call_backend_tmdb(endpoint)
+        if data and 'genres' in data:
+            return data['genres']
+        return []
+    except Exception as e:
+        logError(f"Error getting genres: {str(e)}")
+        return []
+
+def show_discover_menu(media_type="movie"):
+    """
+    Hiển thị menu chọn thể loại để discover
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+    """
+    try:
+        media_label = "Phim" if media_type == "movie" else "TV Series"
+        notify(f"Đang tải danh sách thể loại {media_label}...")
+        
+        genres = get_genres_list(media_type)
+        if not genres:
+            alert("Không thể tải danh sách thể loại. Vui lòng thử lại.")
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            return
+        
+        for genre in genres:
+            genre_name = genre.get('name', 'Unknown')
+            genre_id = genre.get('id', 0)
+            
+            url = f"plugin://plugin.video.vietmediaF?action=tmdb_discover_results&media_type={media_type}&genre_id={genre_id}&page=1"
+            list_item = xbmcgui.ListItem(label=f"[COLOR yellow]{genre_name}[/COLOR]")
+            list_item.setProperty('IsPlayable', 'false')
+            info_tag = list_item.getVideoInfoTag()
+            info_tag.setPlot(f"{media_label} thể loại {genre_name}")
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), url, list_item, isFolder=True)
+        
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), cacheToDisc=True)
+        
+    except Exception as e:
+        logError(f"Error showing discover menu: {str(e)}")
+        alert(f"Lỗi hiển thị discover menu: {str(e)}")
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+
+def show_discover(media_type, genre_id, page=1):
+    """
+    Hiển thị kết quả discover theo thể loại
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+        genre_id (int): ID thể loại
+        page (int): Trang kết quả
+    """
+    try:
+        media_label = "phim" if media_type == "movie" else "TV series"
+        notify(f"Đang tải {media_label} theo thể loại...")
+        
+        data = get_discover(media_type, genre_id, page)
+        
+        if data and data.get('results'):
+            # Lọc kết quả theo cache backend
+            notify("Đang kiểm tra cache backend...")
+            if media_type == "movie":
+                filtered_data, _, error_message = filter_cached_results(data, None)
+            else:
+                _, filtered_data, error_message = filter_cached_results(None, data)
+            
+            if error_message:
+                alert(f"⚠️ {error_message}")
+            
+            if filtered_data and filtered_data.get('results'):
+                total_pages = data.get('total_pages', 1)
+                total_results = data.get('total_results', 0)
+                count_info = f"({len(filtered_data['results'])}/{total_results})"
+                
+                display_search_results(
+                    filtered_data if media_type == "movie" else None,
+                    filtered_data if media_type == "tv" else None,
+                    f"Discover {media_label} - {count_info}",
+                    close_directory=False
+                )
+                
+                # Thêm nút phân trang và nút về trang chính
+                next_url = f"plugin://plugin.video.vietmediaF?action=tmdb_discover_results&media_type={media_type}&genre_id={genre_id}&page={page + 1}"
+                add_paging_nav(page, total_pages, next_url)
+            else:
+                alert(f"Không tìm thấy {media_label} nào trong cache cho thể loại này.")
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+        else:
+            alert(f"Không tìm thấy {media_label} nào.")
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            
+    except Exception as e:
+        logError(f"Error showing discover: {str(e)}")
+        alert(f"Lỗi discover: {str(e)}")
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+
+def show_now_playing(page=1):
+    """
+    Hiển thị danh sách phim đang chiếu
+    Lọc cache vì phim đang chiếu đã phát hành, có thể có link download
+    
+    Args:
+        page (int): Trang kết quả
+    """
+    try:
+        notify("Đang tải phim đang chiếu...")
+        
+        data = get_now_playing(page)
+        
+        if data and data.get('results'):
+            notify("Đang kiểm tra cache backend...")
+            filtered_data, _, error_message = filter_cached_results(data, None)
+            
+            if error_message:
+                alert(f"⚠️ {error_message}")
+            
+            if filtered_data and filtered_data.get('results'):
+                total_pages = data.get('total_pages', 1)
+                total_results = data.get('total_results', 0)
+                count_info = f"({len(filtered_data['results'])}/{total_results})"
+                
+                display_search_results(filtered_data, None, f"Phim Đang Chiếu - {count_info}", close_directory=False)
+                
+                # Thêm nút phân trang và nút về trang chính
+                next_url = f"plugin://plugin.video.vietmediaF?action=tmdb_now_playing&page={page + 1}"
+                add_paging_nav(page, total_pages, next_url)
+            else:
+                alert("Không tìm thấy phim đang chiếu nào trong cache.")
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+        else:
+            alert("Không tìm thấy phim đang chiếu.")
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            
+    except Exception as e:
+        logError(f"Error showing now playing: {str(e)}")
+        alert(f"Lỗi phim đang chiếu: {str(e)}")
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+
+def show_upcoming(page=1):
+    """
+    Hiển thị danh sách phim sắp chiếu
+    Không lọc cache vì phim sắp chiếu chưa có link download
+    
+    Args:
+        page (int): Trang kết quả
+    """
+    try:
+        notify("Đang tải phim sắp chiếu...")
+        
+        data = get_upcoming(page)
+        
+        if data and data.get('results'):
+            total_pages = data.get('total_pages', 1)
+            total_results = data.get('total_results', 0)
+            count_info = f"({len(data['results'])}/{total_results})"
+            
+            display_search_results(data, None, f"Phim Sắp Chiếu - {count_info}", close_directory=False)
+            
+            # Thêm nút phân trang và nút về trang chính
+            next_url = f"plugin://plugin.video.vietmediaF?action=tmdb_upcoming&page={page + 1}"
+            add_paging_nav(page, total_pages, next_url)
+        else:
+            alert("Không tìm thấy phim sắp chiếu.")
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            
+    except Exception as e:
+        logError(f"Error showing upcoming: {str(e)}")
+        alert(f"Lỗi phim sắp chiếu: {str(e)}")
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+
+def show_top_rated(media_type="movie", page=1):
+    """
+    Hiển thị danh sách phim/TV đánh giá cao nhất
+    
+    Args:
+        media_type (str): Loại media (movie hoặc tv)
+        page (int): Trang kết quả
+    """
+    try:
+        media_label = "phim" if media_type == "movie" else "TV series"
+        notify(f"Đang tải {media_label} đánh giá cao nhất...")
+        
+        data = get_top_rated(media_type, page)
+        
+        if data and data.get('results'):
+            notify("Đang kiểm tra cache backend...")
+            if media_type == "movie":
+                filtered_data, _, error_message = filter_cached_results(data, None)
+            else:
+                _, filtered_data, error_message = filter_cached_results(None, data)
+            
+            if error_message:
+                alert(f"⚠️ {error_message}")
+            
+            if filtered_data and filtered_data.get('results'):
+                total_pages = data.get('total_pages', 1)
+                total_results = data.get('total_results', 0)
+                count_info = f"({len(filtered_data['results'])}/{total_results})"
+                
+                display_search_results(
+                    filtered_data if media_type == "movie" else None,
+                    filtered_data if media_type == "tv" else None,
+                    f"Top Rated {media_label} - {count_info}",
+                    close_directory=False
+                )
+                
+                # Thêm nút phân trang và nút về trang chính
+                next_url = f"plugin://plugin.video.vietmediaF?action=tmdb_top_rated&media_type={media_type}&page={page + 1}"
+                add_paging_nav(page, total_pages, next_url)
+            else:
+                alert(f"Không tìm thấy {media_label} nào trong cache.")
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+        else:
+            alert(f"Không tìm thấy {media_label} nào.")
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+            
+    except Exception as e:
+        logError(f"Error showing top rated: {str(e)}")
+        alert(f"Lỗi top rated: {str(e)}")
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
