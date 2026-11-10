@@ -22,16 +22,19 @@ SRC_DIR = os.path.join(REPO_DIR, "src")
 # Addon directories (inside src/)
 ADDON_DIRS = [
     "plugin.video.vietmediaF",
+    "plugin.video.elementum",
+    "script.elementum.burst",
+    "context.elementum",
     "repo_vietmediaf_fork",
 ]
 
 # Files/directories to exclude from zip
 ZIP_EXCLUDE_DIRS = {
-    ".git", ".vscode", ".idea",
+    ".git", ".vscode", ".idea", "__pycache__",
 }
 
 ZIP_EXCLUDE_EXTENSIONS = {
-    ".zip",
+    ".zip", ".pyc", ".pyo",
 }
 
 ZIP_EXCLUDE_FILES = {
@@ -135,7 +138,7 @@ def create_addon_zip(addon_dir, addon_id, version):
                 arcname = os.path.join(
                     addon_id,
                     os.path.relpath(filepath, source_dir)
-                )
+                ).replace("\\", "/")
                 zf.write(filepath, arcname)
                 file_count += 1
 
@@ -172,12 +175,13 @@ def main():
     for addon_dir, (addon_id, version, _) in addon_infos:
         create_addon_zip(addon_dir, addon_id, version)
 
-    # Copy repo zip to root for manual Kodi install
+    # Copy addon zips to root for manual Kodi File Manager install
     print()
     for addon_dir, (addon_id, version, _) in addon_infos:
-        if not addon_id.startswith("repo_"):
-            continue
         zip_filename = f"{addon_id}-{version}.zip"
+        for root_file in os.listdir(REPO_DIR):
+            if root_file.startswith(f"{addon_id}-") and root_file.endswith(".zip") and root_file != zip_filename:
+                os.remove(os.path.join(REPO_DIR, root_file))
         src = os.path.join(REPO_DIR, addon_id, zip_filename)
         dst = os.path.join(REPO_DIR, zip_filename)
         shutil.copy2(src, dst)
