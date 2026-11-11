@@ -6,6 +6,8 @@ __pycache__/
 # KODI add-on source directories
 src/
 plugin.video.hdvn/
+plugin.video.elementum-0.1.119.zip
+plugin.video.elementum/plugin.video.elementum-0.1.119.zip
 
 # IDE
 .vscode/
