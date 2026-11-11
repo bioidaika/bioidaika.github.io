@@ -29,8 +29,7 @@
 <addon id="plugin.video.elementum" name="Elementum" version="0.1.119" provider-name="elgatito">
     <requires>
         <import addon="xbmc.addon" version="16.0.0" />
-        <import addon="script.elementum.burst" version="0.0.103" optional="true" />
-        <import addon="context.elementum" optional="true" />
+        <import addon="repository.elementumorg" optional="true" />
         <import addon="script.module.kodi-six" />
         <import addon="script.module.requests" version="2.9.1" />
     </requires>

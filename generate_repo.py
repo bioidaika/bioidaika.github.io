@@ -120,6 +120,12 @@ def create_addon_zip(addon_dir, addon_id, version):
     zip_filename = f"{addon_id}-{version}.zip"
     zip_path = os.path.join(zip_out_dir, zip_filename)
 
+    # Preserve pre-built multi-platform fat zip (> 100 MB) if already present
+    if os.path.isfile(zip_path) and os.path.getsize(zip_path) > 100 * 1024 * 1024:
+        zip_size_mb = os.path.getsize(zip_path) / (1024 * 1024)
+        print(f"[PRESERVED] {addon_id}/{zip_filename} ({zip_size_mb:.1f} MB All-platforms archive)")
+        return
+
     # Remove old zips in this directory
     for f in os.listdir(zip_out_dir):
         if f.endswith(".zip"):
