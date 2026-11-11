@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.vietmediaF" name="VietMediaF" version="12.0.3" provider-name="bioidaika">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0" />
+        <import addon="script.module.requests" />
+        <import addon="plugin.video.elementum" optional="true" />
+        <import addon="script.elementum.burst" version="0.0.103" optional="true" />
+        <import addon="context.elementum" optional="true" />
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.service" library="autorun.py" />
+    <extension point="xbmc.addon.metadata">
+        <reuselanguageinvoker>true</reuselanguageinvoker>
+        <summary lang="en">VietMediaF Tracker &amp; Elementum Frontend for Kodi</summary>
+        <summary lang="vi">VietMediaF — Giao diện xem phim Torrent 4K/BluRay tích hợp Tracker &amp; Elementum</summary>
+        <description lang="en">Dedicated Kodi frontend for VietMediaF UNIT3D Private Tracker using Elementum's rich TMDB UI, P2P engine, and Elementum Burst (45 UNIT3D trackers).</description>
+        <description lang="vi">Giao diện chuyên biệt cho Private Tracker VietMediaF (tracker.vietmediaf.store) sử dụng bộ hiển thị Poster/Fanart/Cast chuẩn Elementum và bộ tìm kiếm 45 tracker UNIT3D.</description>
+        <disclaimer lang="vi">Addon hỗ trợ kết nối tới tracker cá nhân thông qua API Key của người dùng và phát qua engine Elementum.</disclaimer>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.png</fanart>
+        </assets>
+    </extension>
+</addon>
