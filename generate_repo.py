@@ -22,9 +22,6 @@ SRC_DIR = os.path.join(REPO_DIR, "src")
 # Addon directories (inside src/)
 ADDON_DIRS = [
     "plugin.video.vietmediaF",
-    "plugin.video.elementum",
-    "script.elementum.burst",
-    "context.elementum",
     "repo_vietmediaf_fork",
     "repository.elementumorg",
 ]

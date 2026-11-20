@@ -4,7 +4,6 @@
         <import addon="xbmc.python" version="3.0.0" />
         <import addon="script.module.requests" />
         <import addon="plugin.video.elementum" optional="true" />
-        <import addon="context.elementum" optional="true" />
     </requires>
     <extension point="xbmc.python.pluginsource" library="default.py">
         <provides>video</provides>
