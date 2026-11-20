@@ -26,6 +26,7 @@ ADDON_DIRS = [
     "script.elementum.burst",
     "context.elementum",
     "repo_vietmediaf_fork",
+    "repository.elementumorg",
 ]
 
 # Files/directories to exclude from zip
@@ -147,6 +148,15 @@ def create_addon_zip(addon_dir, addon_id, version):
                 ).replace("\\", "/")
                 zf.write(filepath, arcname)
                 file_count += 1
+
+    # Copy addon.xml and metadata assets to {addon_id}/ for repository browsing
+    src_xml = os.path.join(source_dir, "addon.xml")
+    if os.path.isfile(src_xml):
+        shutil.copy2(src_xml, os.path.join(zip_out_dir, "addon.xml"))
+    for asset in ("icon.png", "fanart.png"):
+        src_asset = os.path.join(source_dir, asset)
+        if os.path.isfile(src_asset):
+            shutil.copy2(src_asset, os.path.join(zip_out_dir, asset))
 
     zip_size_kb = os.path.getsize(zip_path) / 1024
     print(f"[CREATED] {addon_id}/{zip_filename} ({zip_size_kb:.1f} KB, {file_count} files)")
